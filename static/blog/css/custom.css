@@ -1,0 +1,85 @@
+/* Blog Application Custom Layout Styles */
+
+/* Solid blue sidebar style matching TechBlogs branding color */
+.bg-gradient-primary {
+    background-color: #2F54EB !important;
+    background-image: none !important;
+}
+
+/* Sidebar branding typography */
+.sidebar-brand-text {
+    font-weight: 800 !important;
+    letter-spacing: 0.1rem;
+    font-size: 1.1rem !important;
+    text-transform: uppercase;
+}
+
+/* Custom Purple styling for Blogs titles */
+.text-purple {
+    color: #7B68EE !important;
+}
+
+/* Custom active pagination buttons color */
+.page-item.active .page-link {
+    background-color: #5A67D8 !important;
+    border-color: #5A67D8 !important;
+}
+
+/* Table header column labels uppercase format */
+.table th {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: #4e73df;
+    vertical-align: middle !important;
+}
+
+/* Table row cells alignment and vertical center styling */
+.table td {
+    vertical-align: middle !important;
+    font-size: 0.9rem;
+}
+
+/* Form group label coloring */
+.form-group label {
+    font-weight: 600;
+    color: #2F54EB;
+}
+
+/* Ensure error fields show standard Bootstrap invalid feedback styles */
+.is-invalid ~ .invalid-feedback {
+    display: block;
+}
+
+/* Spinner indicator positioning inside processing modal elements */
+.spinner-border-sm {
+    margin-right: 0.5rem;
+}
+
+/* Adjust standard file widget styling */
+.form-control-file {
+    padding-top: 3px;
+}
+
+/* Flat action buttons styling (plain icons, no colored background) */
+.action-icon-link {
+    color: #858796;
+    margin: 0 0.35rem;
+    font-size: 1rem;
+    transition: color 0.15s ease-in-out;
+}
+
+.action-icon-link:hover {
+    color: #2F54EB;
+    text-decoration: none;
+}
+
+.action-icon-link.delete-icon:hover {
+    color: #e74a3b;
+}
+
+/* Search button background styling */
+.navbar-search .btn-primary {
+    background-color: #2F54EB !important;
+    border-color: #2F54EB !important;
+}

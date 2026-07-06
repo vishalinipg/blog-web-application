@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Create New Blog - TechBlogs{% endblock %}
+
+{% block extrastyle %}
+<!-- Summernote Lite CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 font-weight-bold text-purple">Create New Blog</h1>
+</div>
+
+<form method="POST" enctype="multipart/form-data" novalidate>
+    {% csrf_token %}
+
+    <!-- 1. Title Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="form-group mb-0">
+                <label for="id_title" class="font-weight-bold text-dark">Blog Title</label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div class="invalid-feedback d-block">{{ form.title.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 2. Image Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="form-group mb-0">
+                <label for="id_image" class="font-weight-bold text-dark">Images</label>
+                {{ form.image }}
+                {% if form.image.errors %}
+                    <div class="invalid-feedback d-block">{{ form.image.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 3. Description Card -->
+    <div class="card shadow mb-4">
+        <div class="card-body">
+            <div class="form-group mb-0">
+                <label for="id_content" class="font-weight-bold text-dark">Description</label>
+                {{ form.content }}
+                {% if form.content.errors %}
+                    <div class="invalid-feedback d-block">{{ form.content.errors.0 }}</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 4. Category & Tags Cards -->
+    <div class="row">
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="id_category" class="font-weight-bold text-dark">Category</label>
+                        {{ form.category }}
+                        {% if form.category.errors %}
+                            <div class="invalid-feedback d-block">{{ form.category.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 mb-4">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="id_tags" class="font-weight-bold text-dark">Tags</label>
+                        <select name="tags" id="id_tags" class="form-control" multiple="multiple" style="width: 100%;">
+                            <!-- Dynamically loaded Select2 options -->
+                            {% if form.instance.tags %}
+                                {% for tag in form.instance.tags_list %}
+                                    <option value="{{ tag }}" selected>{{ tag }}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                        {% if form.tags.errors %}
+                            <div class="invalid-feedback d-block">{{ form.tags.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Actions Footer -->
+    <div class="form-group mb-5">
+        <button type="submit" class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm" id="create-submit-btn">Submit</button>
+    </div>
+</form>
+{% endblock %}
+
+{% block extrajs %}
+<!-- Summernote Lite JS -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script>
+    $(document).ready(function() {
+        // Initialize Summernote Rich Text Editor
+        $('#id_content').summernote({
+            placeholder: 'Enter blog content description...',
+            tabsize: 2,
+            height: 250,
+            toolbar: [
+                ['font', ['bold', 'underline', 'italic']],
+                ['fontname', ['fontname']],
+                ['color', ['color']],
+                ['para', ['ul', 'ol', 'paragraph']],
+                ['insert', ['link']],
+                ['view', ['codeview', 'help']]
+            ]
+        });
+
+        // Initialize Select2 tag chips input widget
+        $('#id_tags').select2({
+            tags: true,
+            tokenSeparators: [',', ' '],
+            placeholder: 'Enter tags (press Enter or Comma)...',
+            width: '100%'
+        });
+
+        // Clean validation errors on input change
+        $('input, select, textarea').on('change input', function() {
+            $(this).removeClass('is-invalid');
+            $(this).siblings('.invalid-feedback').remove();
+        });
+    });
+</script>
+{% endblock %}

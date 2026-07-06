@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ blog.title }} - Blog Detail{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Centered Blog View Container Column -->
+    <div class="col-lg-8 mx-auto">
+        
+        <!-- Blog Article Card -->
+        <div class="card shadow mb-4">
+            <div class="card-body p-4">
+                
+                <!-- 1. Cover Image Presentation (Fits width, vertical scrolling for remainder) -->
+                {% if blog.image %}
+                    <div class="position-relative text-center mb-4 rounded border shadow-sm" style="max-height: 450px; overflow-y: auto;">
+                        <img class="img-fluid w-100" 
+                             src="{{ blog.image.url }}" 
+                             alt="{{ blog.title }}"
+                             style="height: auto; display: block;">
+                        
+                        <!-- Slide Chevron Navigation Indicators Overlay -->
+                        <a class="position-absolute text-white" href="#" style="left: 20px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; opacity: 0.7; z-index: 10;">
+                            <i class="fas fa-chevron-left"></i>
+                        </a>
+                        <a class="position-absolute text-white" href="#" style="right: 20px; top: 50%; transform: translateY(-50%); font-size: 1.5rem; opacity: 0.7; z-index: 10;">
+                            <i class="fas fa-chevron-right"></i>
+                        </a>
+                    </div>
+                {% endif %}
+
+                <!-- 2. Bullet-Separated Metadata Bar -->
+                <div class="d-flex align-items-center text-muted small mb-3">
+                    <span class="mr-3">
+                        <i class="fas fa-user-circle mr-1 text-primary"></i> admin
+                    </span>
+                    <span class="mr-3">&bull;</span>
+                    <span class="mr-3">
+                        {{ blog.created_at|date:"b. d, Y" }}
+                    </span>
+                    <span class="mr-3">&bull;</span>
+                    <span>
+                        {{ blog.category }}
+                    </span>
+                </div>
+
+                <!-- 3. Blog Title Heading -->
+                <h2 class="font-weight-bold text-gray-900 mb-3">{{ blog.title }}</h2>
+
+                <!-- 4. Tags List Badges -->
+                <div class="mb-4">
+                    {% for tag in blog.tags_list %}
+                        <span class="badge badge-light border text-purple font-weight-normal px-2 py-1 mr-1">{{ tag }}</span>
+                    {% endfor %}
+                </div>
+
+                <hr class="my-4">
+
+                <!-- 5. Blog Content/Description Body -->
+                <div class="blog-content text-gray-900 px-lg-2" style="font-size: 1.05rem; line-height: 1.8; white-space: pre-line;">
+                    {{ blog.content|safe }}
+                </div>
+            </div>
+            
+            <!-- Footer Action link -->
+            <div class="card-footer py-3 bg-light">
+                <a href="{% url 'blog:list' %}" class="btn btn-secondary btn-icon-split shadow-sm">
+                    <span class="icon text-white-50">
+                        <i class="fas fa-arrow-left"></i>
+                    </span>
+                    <span class="text">Back to Blogs</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
