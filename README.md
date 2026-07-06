@@ -1,4 +1,4 @@
-# TechBlogs - Django Web Application (Base Setup)
+# TechBlogs - Django Blog Web Application (Base Setup)
 
 This is the initial clean Django project framework setup for the TechBlogs web application. 
 
