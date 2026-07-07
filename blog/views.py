@@ -128,7 +128,13 @@ class BlogUpdateView(View):
     asynchronously using form validations.
     """
     def get(self, request, pk, *args, **kwargs):
-        obj = get_object_or_404(Blog, pk=pk)
+        try:
+            obj = Blog.objects.get(pk=pk)
+        except Blog.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Blog post not found.'
+            }, status=404)
         data = {
             'id': obj.id,
             'title': obj.title,
@@ -144,7 +150,13 @@ class BlogUpdateView(View):
         })
 
     def put(self, request, pk, *args, **kwargs):
-        obj = get_object_or_404(Blog, pk=pk)
+        try:
+            obj = Blog.objects.get(pk=pk)
+        except Blog.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Blog post not found.'
+            }, status=404)
 
         # Parse multipart/form-data for PUT requests
         if request.content_type.startswith('multipart/form-data'):
@@ -195,7 +207,13 @@ class BlogDeleteView(View):
     and removes the record from the database.
     """
     def delete(self, request, pk, *args, **kwargs):
-        obj = get_object_or_404(Blog, pk=pk)
+        try:
+            obj = Blog.objects.get(pk=pk)
+        except Blog.DoesNotExist:
+            return JsonResponse({
+                'success': False,
+                'message': 'Blog post not found.'
+            }, status=404)
         
         # Delete image file from disk if it exists
         if obj.image:
