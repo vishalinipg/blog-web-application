@@ -1,6 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 import os
+from urllib.parse import urlencode
 from django.views.generic import TemplateView, DetailView
 from django.http import HttpResponse, JsonResponse
 from ajax_datatable.views import AjaxDatatableView
@@ -113,7 +114,9 @@ class BlogCreateView(View):
             tags_list = request.POST.getlist('tags')
             obj.tags = ', '.join(tags_list)
             obj.save()
-            return redirect('/?success=1')
+            redirect_url = reverse('blog:list')
+            query_string = urlencode({'success': 1})
+            return redirect(f"{redirect_url}?{query_string}")
         else:
             return render(request, 'blog/create.html', {'form': form})
 
