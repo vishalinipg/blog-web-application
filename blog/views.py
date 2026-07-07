@@ -11,11 +11,67 @@ from django.utils.text import Truncator
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
-from .forms import BlogForm
+from django.contrib import messages
+from django.contrib.auth import login
+from django.contrib.auth.models import Group, User
+from django.contrib.auth.views import LoginView, LogoutView
+
+from .forms import BlogForm, EmailAuthenticationForm, SignupForm
+from .mixins import AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin
 from .models import Blog
 
 
-class BlogListView(TemplateView):
+class SignupView(View):
+    """
+    Class-Based View to handle user registration.
+    Renders signup.html on GET, processes input and assigns selected group on POST.
+    """
+
+    def get(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("blog:list")
+        form = SignupForm()
+        return render(request, "blog/signup.html", {"form": form})
+
+    def post(self, request, *args, **kwargs):
+        if request.user.is_authenticated:
+            return redirect("blog:list")
+        form = SignupForm(request.POST)
+        if form.is_valid():
+            full_name = form.cleaned_data["full_name"]
+            email = form.cleaned_data["email"]
+            group_name = form.cleaned_data["group"]
+            password = form.cleaned_data["password"]
+
+            # Split full name on the first space intelligently
+            name_parts = full_name.strip().split(" ", 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ""
+
+            # Create User
+            user = User.objects.create_user(
+                username=email,  # Set email as username for EmailBackend
+                email=email,
+                password=password,
+                first_name=first_name,
+                last_name=last_name,
+            )
+
+            # Assign selected group
+            try:
+                group = Group.objects.get(name=group_name)
+                user.groups.add(group)
+            except Group.DoesNotExist:
+                pass
+
+            messages.success(request, "Registration successful! Please log in.")
+            return redirect("blog:login")
+        else:
+            return render(request, "blog/signup.html", {"form": form})
+
+
+class BlogListView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, TemplateView):
+    permission_required = "blog.view_blog"
     """
     Renders the blog list dashboard template, providing a blank BlogForm instance
     in the context for the asynchronous create modal.
@@ -29,7 +85,10 @@ class BlogListView(TemplateView):
         return context
 
 
-class BlogAjaxDatatableView(AjaxDatatableView):
+class BlogAjaxDatatableView(
+    AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, AjaxDatatableView
+):
+    permission_required = "blog.view_blog"
     """
     Server-side controller for the django-ajax-datatable interface.
     Handles searching, pagination, sorting, and returns structured JSON responses.
@@ -129,30 +188,44 @@ class BlogAjaxDatatableView(AjaxDatatableView):
         edit_url = reverse("blog:edit", kwargs={"pk": obj.id})
         delete_url = reverse("blog:delete", kwargs={"pk": obj.id})
 
-        # Generate action buttons as plain hoverable icons matching the screenshot
-        row["actions"] = f"""
-            <div class="text-center">
+        # Generate action buttons dynamically based on user permissions
+        user = self.request.user
+        can_view = user.has_perm("blog.view_blog")
+        can_edit = user.has_perm("blog.change_blog")
+        can_delete = user.has_perm("blog.delete_blog")
+
+        actions_html = '<div class="text-center">'
+        if can_view:
+            actions_html += f"""
                 <a href="{detail_url}" class="action-icon-link" title="View Detail">
                     <i class="fas fa-eye"></i>
                 </a>
+            """
+        if can_edit:
+            actions_html += f"""
                 <a href="#" class="action-icon-link edit-blog-btn" 
                    data-id="{obj.id}" 
                    data-url="{edit_url}" 
                    title="Edit Blog">
                     <i class="fas fa-pencil-alt"></i>
                 </a>
+            """
+        if can_delete:
+            actions_html += f"""
                 <a href="#" class="action-icon-link delete-blog-btn delete-icon" 
                    data-id="{obj.id}" 
                    data-url="{delete_url}" 
                    title="Delete Blog">
                     <i class="fas fa-trash"></i>
                 </a>
-            </div>
-        """
+            """
+        actions_html += "</div>"
+        row["actions"] = actions_html
         return row
 
 
-class BlogCreateView(View):
+class BlogCreateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
+    permission_required = "blog.add_blog"
     """
     Handles rendering the full-page creation form (GET)
     and processing the creation request (POST) with tag formatting.
@@ -177,7 +250,8 @@ class BlogCreateView(View):
             return render(request, "blog/create.html", {"form": form})
 
 
-class BlogUpdateView(View):
+class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
+    permission_required = "blog.change_blog"
     """
     Class-Based View to retrieve blog details (GET) and save changes (POST)
     asynchronously using form validations.
@@ -198,6 +272,9 @@ class BlogUpdateView(View):
             "tags": obj.tags_list,  # Return tags list for select2 pre-population
             "publish": obj.publish,
             "image_url": obj.image.url if obj.image else "",
+            "author": obj.author_id,
+            "editor": obj.editor_id,
+            "publisher": obj.publisher_id,
         }
         return JsonResponse({"success": True, "data": data})
 
@@ -241,7 +318,8 @@ class BlogUpdateView(View):
             return JsonResponse({"success": False, "errors": errors}, status=400)
 
 
-class BlogDetailView(DetailView):
+class BlogDetailView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, DetailView):
+    permission_required = "blog.view_blog"
     """
     Class-Based View to display the detail layout of a single blog post.
     Renders templates/blog/detail.html.
@@ -252,7 +330,8 @@ class BlogDetailView(DetailView):
     context_object_name = "blog"
 
 
-class BlogDeleteView(View):
+class BlogDeleteView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
+    permission_required = "blog.delete_blog"
     """
     Class-Based View to handle asynchronous deletion of a Blog post.
     Deletes the associated media file from disk to prevent storage leakage,

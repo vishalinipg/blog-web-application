@@ -56,7 +56,11 @@
 
             <!-- Heading -->
             <div class="sidebar-heading">
-                ADMIN
+                {% if request.user.is_superuser %}
+                    ADMIN
+                {% else %}
+                    {{ request.user.groups.first.name|upper|default:"GUEST" }}
+                {% endif %}
             </div>
 
             <!-- Nav Item - Blogs -->
@@ -112,16 +116,38 @@
                         <li class="nav-item dropdown no-arrow">
                             <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button"
                                 data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <span class="mr-2 d-none d-lg-inline text-gray-600 small">Admin</span>
+                                {% if request.user.is_authenticated %}
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">{{ request.user.first_name }} {{ request.user.last_name }} ({% if request.user.is_superuser %}Admin{% else %}{{ request.user.groups.first.name|default:"No Group" }}{% endif %})</span>
+                                {% else %}
+                                    <span class="mr-2 d-none d-lg-inline text-gray-600 small">Guest</span>
+                                {% endif %}
                                 <img class="img-profile rounded-circle" src="{% static 'img/undraw_profile.svg' %}">
                             </a>
                             <!-- Dropdown - User Information -->
                             <div class="dropdown-menu dropdown-menu-right shadow animated--grow-in"
                                 aria-labelledby="userDropdown">
-                                <a class="dropdown-item" href="/admin/" target="_blank">
-                                    <i class="fas fa-user-cog fa-sm fa-fw mr-2 text-gray-400"></i>
-                                    Django Admin
-                                </a>
+                                {% if request.user.is_authenticated %}
+                                    {% if request.user.is_superuser %}
+                                        <a class="dropdown-item" href="/admin/" target="_blank">
+                                            <i class="fas fa-user-cog fa-sm fa-fw mr-2 text-gray-400"></i> Admin Page
+                                        </a>
+                                        <div class="dropdown-divider"></div>
+                                    {% endif %}
+                                    <!-- Safe POST-based Logout form -->
+                                    <form action="{% url 'blog:logout' %}" method="POST" id="logout-form" style="display: none;">
+                                        {% csrf_token %}
+                                    </form>
+                                    <a class="dropdown-item" href="#" onclick="document.getElementById('logout-form').submit();">
+                                        <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
+                                    </a>
+                                {% else %}
+                                    <a class="dropdown-item" href="{% url 'blog:login' %}">
+                                        <i class="fas fa-sign-in-alt fa-sm fa-fw mr-2 text-gray-400"></i> Login
+                                    </a>
+                                    <a class="dropdown-item" href="{% url 'blog:signup' %}">
+                                        <i class="fas fa-user-plus fa-sm fa-fw mr-2 text-gray-400"></i> Register
+                                    </a>
+                                {% endif %}
                             </div>
                         </li>
 
@@ -169,6 +195,26 @@
 
     <!-- Custom scripts for all pages-->
     <script src="{% static 'js/sb-admin-2.min.js' %}"></script>
+
+    <!-- SweetAlert2 notifications global script -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        $(document).ready(function() {
+            {% if messages %}
+                {% for msg in messages %}
+                    Swal.fire({
+                        icon: '{{ msg.tags }}' === 'error' ? 'error' : 'success',
+                        title: '{{ msg.tags|title }}',
+                        text: '{{ msg }}',
+                        timer: 3000,
+                        showConfirmButton: false,
+                        toast: true,
+                        position: 'top-end'
+                    });
+                {% endfor %}
+            {% endif %}
+        });
+    </script>
 
     {% block extrajs %}{% endblock %}
 

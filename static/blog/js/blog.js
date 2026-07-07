@@ -79,6 +79,9 @@ $(document).ready(function() {
                     $('#edit-blog-id').val(data.id);
                     $('#id_edit_title').val(data.title);
                     $('#id_edit_category').val(data.category);
+                    $('#id_edit_author').val(data.author || '');
+                    $('#id_edit_editor').val(data.editor || '');
+                    $('#id_edit_publisher').val(data.publisher || '');
 
                     // Load content into Summernote editor
                     $('#id_edit_content').summernote('code', data.content || '');

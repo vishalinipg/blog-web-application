@@ -1,5 +1,6 @@
 import os
 
+from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.db import models
 
@@ -80,6 +81,33 @@ class Blog(models.Model):
         default="",
         verbose_name="Tags",
         help_text="Enter comma-separated tags.",
+    )
+    author = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="authored_blogs",
+        verbose_name="Author",
+        help_text="Select the author of the blog post.",
+    )
+    editor = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="edited_blogs",
+        verbose_name="Editor",
+        help_text="Select the editor of the blog post.",
+    )
+    publisher = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="published_blogs",
+        verbose_name="Publisher",
+        help_text="Select the publisher of the blog post.",
     )
     publish = models.BooleanField(
         default=True, verbose_name="Publish", help_text="Check to make the post public."
