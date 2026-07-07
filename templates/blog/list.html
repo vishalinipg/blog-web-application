@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard - Blogs Directory{% endblock %}
+
+{% block extrastyle %}
+<!-- Page level plugins CSS -->
+<link href="{% static 'vendor/datatables/dataTables.bootstrap4.min.css' %}" rel="stylesheet">
+<!-- django-ajax-datatable CSS -->
+<link href="{% static 'ajax_datatable/css/style.css' %}" rel="stylesheet">
+<!-- Summernote Lite CSS -->
+<link href="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.css" rel="stylesheet">
+<!-- Select2 CSS -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+{% endblock %}
+
+{% block content %}
+<!-- Page Heading -->
+<div class="d-sm-flex align-items-center justify-content-between mb-4">
+    <h1 class="h3 mb-0 font-weight-bold text-purple">Blogs</h1>
+</div>
+
+<!-- Blogs Card -->
+<div class="card shadow mb-4">
+    <div class="card-header py-3 bg-white d-flex flex-row align-items-center justify-content-between">
+        <a href="{% url 'blog:create' %}" class="btn btn-sm btn-light border text-secondary font-weight-bold shadow-sm">
+            <i class="fas fa-plus mr-1"></i> Add Blog
+        </a>
+        <div>
+            <button class="btn btn-sm btn-light border text-secondary mr-2 font-weight-bold shadow-sm" onclick="location.reload();">
+                <i class="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+            <div class="dropdown d-inline-block">
+                <button class="btn btn-sm btn-light border text-secondary font-weight-bold shadow-sm dropdown-toggle" type="button" id="filterDropdown" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    <i class="fas fa-filter mr-1"></i> <span id="current-filter-label">Filter</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right shadow animated--fade-in" aria-labelledby="filterDropdown">
+                    <a class="dropdown-item category-filter-item active" href="#" data-category="All">All Categories</a>
+                    <div class="dropdown-divider"></div>
+                    <a class="dropdown-item category-filter-item" href="#" data-category="Python">Python</a>
+                    <a class="dropdown-item category-filter-item" href="#" data-category="Django">Django</a>
+                    <a class="dropdown-item category-filter-item" href="#" data-category="PowerBI">PowerBI</a>
+                    <a class="dropdown-item category-filter-item" href="#" data-category="Scrapy">Scrapy</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped" id="blog-datatable" width="100%" cellspacing="0">
+                <!-- Columns are drawn dynamically by django-ajax-datatable -->
+            </table>
+        </div>
+    </div>
+</div>
+
+<!-- Edit Blog Modal -->
+<div class="modal fade" id="editBlogModal" tabindex="-1" role="dialog" aria-labelledby="editBlogModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <form id="edit-blog-form" method="POST" enctype="multipart/form-data" novalidate>
+                {% csrf_token %}
+                <input type="hidden" name="blog_id" id="edit-blog-id">
+                <div class="modal-header bg-white border-bottom-0 pb-0">
+                    <h5 class="modal-title font-weight-bold text-purple" id="editBlogModalLabel">Blogs</h5>
+                    <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">×</span>
+                    </button>
+                </div>
+                <div class="modal-body pt-0">
+                    <hr class="mt-2 mb-4">
+                    
+                    <div class="form-group mb-4">
+                        <label for="id_edit_title" class="font-weight-bold text-dark">Blog Title</label>
+                        <input type="text" name="title" id="id_edit_title" class="form-control" placeholder="Enter blog title">
+                        <div class="invalid-feedback d-none" id="error_edit_title"></div>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label for="id_edit_image" class="font-weight-bold text-dark">Images</label>
+                        <input type="file" name="image" id="id_edit_image" class="form-control-file mb-1">
+                        <small class="form-text text-muted" id="edit-image-help"></small>
+                        <div class="invalid-feedback d-none" id="error_edit_image"></div>
+                    </div>
+                    
+                    <div class="form-group mb-4">
+                        <label for="id_edit_content" class="font-weight-bold text-dark">Description</label>
+                        <textarea name="content" id="id_edit_content" class="form-control" rows="5"></textarea>
+                        <div class="invalid-feedback d-none" id="error_edit_content"></div>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_edit_category" class="font-weight-bold text-dark">Category</label>
+                                <select name="category" id="id_edit_category" class="form-control">
+                                    {% for val, label in form.fields.category.choices %}
+                                        <option value="{{ val }}">{{ label }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback d-none" id="error_edit_category"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="id_edit_tags" class="font-weight-bold text-dark">Tags</label>
+                                <select name="tags" id="id_edit_tags" class="form-control" multiple="multiple" style="width: 100%;">
+                                    <!-- select2 options populated dynamically -->
+                                </select>
+                                <div class="invalid-feedback d-none" id="error_edit_tags"></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group form-check mb-0">
+                        <input type="checkbox" name="publish" id="id_edit_publish" class="form-check-input" checked>
+                        <label for="id_edit_publish" class="form-check-label font-weight-bold text-dark ml-2">Publish</label>
+                        <div class="invalid-feedback d-none" id="error_edit_publish"></div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top-0 pt-0 justify-content-start">
+                    <button class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm" type="submit" id="edit-submit-btn">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extrajs %}
+<!-- Page level plugins JS -->
+<script src="{% static 'vendor/datatables/jquery.dataTables.min.js' %}"></script>
+<script src="{% static 'vendor/datatables/dataTables.bootstrap4.min.js' %}"></script>
+
+<!-- SweetAlert2 Plugin -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<!-- django-ajax-datatable JS -->
+<script src="{% static 'ajax_datatable/js/utils.js' %}"></script>
+
+<!-- Summernote Lite JS -->
+<script src="https://cdn.jsdelivr.net/npm/summernote@0.8.18/dist/summernote-lite.min.js"></script>
+<!-- Select2 JS -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<!-- Custom app-specific script coordinator -->
+<script src="{% static 'blog/js/blog.js' %}"></script>
+
+<!-- Initialize Datatable & Success check popups -->
+<script>
+    $(document).ready(function() {
+        // Initialize Server-Side DataTable
+        AjaxDatatableViewUtils.initialize_table(
+            $('#blog-datatable'),
+            "{% url 'blog:datatable' %}",
+            {
+                processing: false,
+                autoWidth: false,
+                responsive: true,
+                dom: "<'row'<'col-sm-12 col-md-6'l><'col-sm-12 col-md-6'f>>" +
+                     "<'row'<'col-sm-12'tr>>" +
+                     "<'row'<'col-sm-12 col-md-5'i><'col-sm-12 col-md-7'p>>",
+                search: {
+                    search: "{{ request.GET.search|default:''|escapejs }}"
+                },
+                oSearch: {
+                    sSearch: "{{ request.GET.search|default:''|escapejs }}"
+                }
+            },
+            {
+                categories: function() {
+                    var selected = [];
+                    $('.category-filter-item.active').each(function() {
+                        var cat = $(this).data('category');
+                        if (cat !== 'All') {
+                            selected.push(cat);
+                        }
+                    });
+                    return selected.join(',');
+                }
+            }
+        );
+
+        // Display popup notifications on post creation redirection
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('success') === '1') {
+            Swal.fire({
+                title: 'Good job!',
+                text: 'Blog has been Saved Successfully !!',
+                icon: 'success',
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#2F54EB'
+            });
+            // Clear URL search parameters to avoid re-triggering popup alert on manual reload
+            window.history.replaceState({}, document.title, window.location.pathname);
+        }
+    });
+</script>
+{% endblock %}

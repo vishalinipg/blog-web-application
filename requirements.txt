@@ -1,0 +1,4 @@
+Django==5.0.14
+django-ajax-datatable==4.5.0
+Pillow==10.4.0
+
