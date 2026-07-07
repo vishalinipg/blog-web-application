@@ -139,9 +139,14 @@ $(document).ready(function() {
         // Lock form and display processing loading spinner
         submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Saving...');
 
+        var csrfToken = $(form).find('input[name="csrfmiddlewaretoken"]').val();
+
         $.ajax({
             url: postUrl,
-            type: 'POST',
+            type: 'PUT',
+            headers: {
+                'X-CSRFToken': csrfToken
+            },
             data: formData,
             processData: false,
             contentType: false,

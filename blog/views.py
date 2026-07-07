@@ -3,7 +3,9 @@ from django.views import View
 import os
 from urllib.parse import urlencode
 from django.views.generic import TemplateView, DetailView
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, QueryDict
+from django.utils.datastructures import MultiValueDict
+from django.http.multipartparser import MultiPartParser
 from ajax_datatable.views import AjaxDatatableView
 from django.utils.text import Truncator
 from django.urls import reverse
@@ -141,17 +143,29 @@ class BlogUpdateView(View):
             'data': data
         })
 
-    def post(self, request, pk, *args, **kwargs):
+    def put(self, request, pk, *args, **kwargs):
         obj = get_object_or_404(Blog, pk=pk)
-        form = BlogForm(request.POST, request.FILES, instance=obj)
+
+        # Parse multipart/form-data for PUT requests
+        if request.content_type.startswith('multipart/form-data'):
+            put_data, put_files = MultiPartParser(
+                request.META, 
+                request, 
+                request.upload_handlers
+            ).parse()
+        else:
+            put_data = QueryDict(request.body)
+            put_files = MultiValueDict()
+
+        form = BlogForm(put_data, put_files, instance=obj)
         if form.is_valid():
             edit_obj = form.save(commit=False)
-            # Extract and join multiselect tags array
-            tags_list = request.POST.getlist('tags')
+            # Extract and join multiselect tags array from the parsed PUT data
+            tags_list = put_data.getlist('tags')
             edit_obj.tags = ', '.join(tags_list)
             
-            # Map publish state checkbox explicitly
-            edit_obj.publish = 'publish' in request.POST or request.POST.get('publish') == 'true'
+            # Map publish state checkbox explicitly from the parsed PUT data
+            edit_obj.publish = 'publish' in put_data or put_data.get('publish') == 'true'
             
             edit_obj.save()
             return JsonResponse({
