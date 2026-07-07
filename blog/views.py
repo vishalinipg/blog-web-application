@@ -194,7 +194,7 @@ class BlogDeleteView(View):
     Deletes the associated media file from disk to prevent storage leakage,
     and removes the record from the database.
     """
-    def post(self, request, pk, *args, **kwargs):
+    def delete(self, request, pk, *args, **kwargs):
         obj = get_object_or_404(Blog, pk=pk)
         
         # Delete image file from disk if it exists

@@ -224,10 +224,10 @@ $(document).ready(function() {
                     }
                 });
 
-                // Issue AJAX POST request to perform database deletion
+                // Issue AJAX DELETE request to perform database deletion
                 $.ajax({
                     url: deleteUrl,
-                    type: 'POST',
+                    type: 'DELETE',
                     headers: {
                         'X-CSRFToken': csrfToken
                     },
