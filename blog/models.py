@@ -27,17 +27,18 @@ def validate_blog_image(field_file):
     if ext not in valid_extensions:
         raise ValidationError(f"Unsupported file extension '{ext}'. Allowed extensions are: {', '.join(valid_extensions)}.")
 
+class Category(models.TextChoices):
+    PYTHON = 'Python', 'Python'
+    DJANGO = 'Django', 'Django'
+    POWERBI = 'PowerBI', 'PowerBI'
+    SCRAPY = 'Scrapy', 'Scrapy'
+
 class Blog(models.Model):
     """
     Blog Model representing article entries in the web application.
     Contains content fields, category definitions, auto-managed timestamps,
     and a media field for cover images.
     """
-    class Category(models.TextChoices):
-        PYTHON = 'Python', 'Python'
-        DJANGO = 'Django', 'Django'
-        POWERBI = 'PowerBI', 'PowerBI'
-        SCRAPY = 'Scrapy', 'Scrapy'
 
     title = models.CharField(
         max_length=255, 
