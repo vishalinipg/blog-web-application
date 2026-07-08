@@ -236,6 +236,11 @@ class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
                 {"success": False, "message": "Blog post not found."}, status=404
             )
 
+        # Track old image path to prevent storage leakage on replacement
+        old_image_path = (
+            obj.image.path if (obj.image and os.path.exists(obj.image.path)) else None
+        )
+
         # Parse multipart/form-data for PUT requests
         if request.content_type.startswith("multipart/form-data"):
             put_data, put_files = MultiPartParser(
@@ -248,6 +253,15 @@ class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
         form = BlogForm(put_data, put_files, instance=obj)
         if form.is_valid():
             edit_obj = form.save(commit=False)
+
+            # If a new image is uploaded, clean up the old file from disk
+            if form.cleaned_data.get("image") and old_image_path:
+                try:
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                except Exception:
+                    pass
+
             # Extract and join multiselect tags array from the parsed PUT data
             tags_list = put_data.getlist("tags")
             edit_obj.tags = ", ".join(tags_list)
