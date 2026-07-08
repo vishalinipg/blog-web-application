@@ -12,7 +12,7 @@ from django.views import View
 from django.views.generic import DetailView, TemplateView
 
 from .forms import BlogForm
-from .mixins import AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin
+from accounts.mixins import AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin
 from .models import Blog
 
 
