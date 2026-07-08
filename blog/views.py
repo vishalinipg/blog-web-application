@@ -71,11 +71,12 @@ class SignupView(View):
 
 
 class BlogListView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, TemplateView):
-    permission_required = "blog.view_blog"
     """
     Renders the blog list dashboard template, providing a blank BlogForm instance
     in the context for the asynchronous create modal.
     """
+
+    permission_required = "blog.view_blog"
 
     template_name = "blog/list.html"
 
@@ -88,11 +89,12 @@ class BlogListView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, Template
 class BlogAjaxDatatableView(
     AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, AjaxDatatableView
 ):
-    permission_required = "blog.view_blog"
     """
     Server-side controller for the django-ajax-datatable interface.
     Handles searching, pagination, sorting, and returns structured JSON responses.
     """
+
+    permission_required = "blog.view_blog"
 
     model = Blog
     title = "Blogs"
@@ -225,11 +227,12 @@ class BlogAjaxDatatableView(
 
 
 class BlogCreateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
-    permission_required = "blog.add_blog"
     """
     Handles rendering the full-page creation form (GET)
     and processing the creation request (POST) with tag formatting.
     """
+
+    permission_required = "blog.add_blog"
 
     def get(self, request, *args, **kwargs):
         form = BlogForm()
@@ -251,11 +254,12 @@ class BlogCreateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
 
 
 class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
-    permission_required = "blog.change_blog"
     """
     Class-Based View to retrieve blog details (GET) and save changes (POST)
     asynchronously using form validations.
     """
+
+    permission_required = "blog.change_blog"
 
     def get(self, request, pk, *args, **kwargs):
         try:
@@ -319,11 +323,12 @@ class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
 
 
 class BlogDetailView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, DetailView):
-    permission_required = "blog.view_blog"
     """
     Class-Based View to display the detail layout of a single blog post.
     Renders templates/blog/detail.html.
     """
+
+    permission_required = "blog.view_blog"
 
     model = Blog
     template_name = "blog/detail.html"
@@ -331,12 +336,13 @@ class BlogDetailView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, Detail
 
 
 class BlogDeleteView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
-    permission_required = "blog.delete_blog"
     """
     Class-Based View to handle asynchronous deletion of a Blog post.
     Deletes the associated media file from disk to prevent storage leakage,
     and removes the record from the database.
     """
+
+    permission_required = "blog.delete_blog"
 
     def delete(self, request, pk, *args, **kwargs):
         try:
