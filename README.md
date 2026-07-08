@@ -2,37 +2,63 @@
 
 TechBlogs is a premium, fully-featured, AJAX-driven blog management application integrated with the **SB Admin 2** theme framework. It supports server-side pagination, database queries, and rich text editing components.
 
+---
+
 ## 🚀 Key Features
 
-- **AJAX CRUD Operations**: Asynchronous Creation, Updating, Deleting, and Reading without full page reloads.
-- **Server-Side DataTables**: Integrated with `django-ajax-datatable` for rendering, sorting, pagination, and data retrieval.
-- **Multi-Selection Filters**: Toggable category dropdown matching multiple filters dynamically (e.g. *Python*, *Django*, *Scrapy*), showing selection counters.
-- **Global Search**: Submitting the topbar search input filters records instantly on the dashboard or redirects and pre-filters from secondary pages.
-- **Rich Text Editor**: Integrated with **Summernote Lite** for rich document descriptions.
-- **Select2 Tagging**: Dynamic tag creation chip input fields.
-- **Responsive Layout**: Fluid design layout compatible with mobile and desktop browsers.
-- **SweetAlert2 Alerts**: Modern confirmation overlays for deleting entries and successful saves.
+### 1. Core Functionality
+*   **AJAX CRUD Operations**: Asynchronous Creation, Updating, Deleting, and Reading without full page reloads.
+*   **Server-Side DataTables**: Integrated with `django-ajax-datatable` for rendering, sorting, pagination, and data retrieval.
+*   **Multi-Selection Filters**: Toggable category dropdown matching multiple filters dynamically (e.g. *Python*, *Django*, *Scrapy*), showing selection counters.
+*   **Global Search**: Submitting the topbar search input filters records instantly on the dashboard or redirects and pre-filters from secondary pages.
+*   **Rich Text Editor**: Integrated with **Summernote Lite** for rich document descriptions.
+*   **Select2 Tagging**: Dynamic tag creation chip input fields.
+*   **Responsive Layout**: Fluid design layout compatible with mobile and desktop browsers.
+*   **SweetAlert2 Alerts**: Modern confirmation overlays for deleting entries and successful saves.
+
+### 2. Authentication & Session Management
+*   **Case-Insensitive Email Login**: Swapped standard Django username logins with a case-insensitive email-based authentication backend (`EmailBackend`).
+*   **User Registration**: Custom signup flow capturing Full Name, Email, Password, and User Group selection.
+*   **Registration Validation**: Strict client/server validation enforcing unique email checks, matching passwords, and password complexity (8+ characters, at least 1 letter, and 1 digit).
+*   **CSRF-Safe Logouts**: Handled via JavaScript POST requests instead of GET requests, complying with Django 5.x session security standards.
+*   **Dynamic Navbar Toggles**: Adapts layout greetings to show the logged-in user's full name and group name (e.g., `Admin`, `Author`, `Editor`, `Publisher`), or displays guest links if anonymous.
+
+### 3. Role-Based Access Control (RBAC)
+*   **Automated Permissions Provisioning**: Integrates a `post_migrate` signal listener (`create_groups_and_permissions`) to automatically generate user groups and assign precise Blog CRUD rights on migration.
+*   **Permissions Matrix**:
+    *   **Author**: `view_blog`, `add_blog` (Cannot Edit/Delete)
+    *   **Editor**: `view_blog`, `add_blog`, `change_blog` (Cannot Delete)
+    *   **Publisher**: `view_blog`, `add_blog`, `change_blog`, `delete_blog` (Full Rights)
+*   **Ajax-Aware Guard Mixins**: Custom `AjaxLoginRequiredMixin` and `AjaxPermissionRequiredMixin` intercept unauthenticated and unauthorized requests, returning custom `401` or `403` status JSON payloads for AJAX calls, or redirecting page loads.
+*   **Dynamic Actions Rendering**: Datatable edit/delete buttons are generated server-side in `customize_row()` by querying individual permissions of the active session.
 
 ---
 
 ## 📸 Screenshots
 
-### 1. Blogs Dashboard List
+### 1. User Signup Page
+![User Signup](screenshots/signup.png)
+
+### 2. User Login Page
+![User Login](screenshots/login.png)
+
+### 3. Blogs Dashboard List
 ![Blogs Dashboard](screenshots/dashboard.png)
 
-### 2. Create Blog Page
-![Create Blog](screenshots/create_blog.png)
+### 4. Create Blog Page
+![Create Blog 01](screenshots/create_blog1.png)
+![Create Blog 02](screenshots/create_blog2.png)
 
-### 3. Edit Blog Modal
+### 5. Edit Blog Modal
 ![Edit Blog Modal](screenshots/edit_modal.png)
 
-### 4. Blog Details View
+### 6. Blog Details View
 ![Blog Details View](screenshots/detail_view.png)
 
-### 5. Success Alerts
+### 7. Success Alerts
 ![Success Notification](screenshots/success_alert.png)
 
-### 6. Delete Alerts
+### 8. Delete Alerts
 ![Delete Notification](screenshots/delete_alert.png)
 
 ---
@@ -64,13 +90,19 @@ pip install django django-ajax-datatable pillow
 ```
 
 ### 4. Apply Database Migrations
-Generate and apply migrations to build the SQLite database schema:
+Generate and apply migrations to build the SQLite database schema and trigger group provisioning signals:
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 5. Run Development Server
+### 5. Create a Superuser
+Create an administrative account to access the backend admin panel:
+```bash
+python manage.py createsuperuser
+```
+
+### 6. Run Development Server
 Start the local server:
 ```bash
 python manage.py runserver
@@ -79,17 +111,29 @@ Visit `http://127.0.0.1:8000/` in your browser.
 
 ---
 
+## 🧪 Running Unit Tests
+
+To run the automated authentication and permission matrix test suite:
+```bash
+python manage.py test blog
+```
+
+---
+
 ## 🗄️ Database Architecture
 
 The `Blog` model consists of the following attributes:
-* `title`: CharField (Blog Title)
-* `content`: TextField (Rich text body description)
-* `image`: ImageField (Cover photo, optional)
-* `category`: CharField (Choices: Python, Django, PowerBI, Scrapy)
-* `tags`: CharField (Comma-separated string tags list)
-* `publish`: BooleanField (Publish status toggle)
-* `created_at`: DateTimeField (Auto-generated timestamp)
-* `updated_at`: DateTimeField (Auto-updated timestamp)
+*   `title`: CharField (Blog Title)
+*   `content`: TextField (Rich text body description)
+*   `image`: ImageField (Cover photo, optional)
+*   `category`: CharField (Choices: Python, Django, PowerBI, Scrapy)
+*   `tags`: CharField (Comma-separated string tags list)
+*   `publish`: BooleanField (Publish status toggle)
+*   `author`: ForeignKey (User in `Author` group, optional, `SET_NULL` on delete)
+*   `editor`: ForeignKey (User in `Editor` group, optional, `SET_NULL` on delete)
+*   `publisher`: ForeignKey (User in `Publisher` group, optional, `SET_NULL` on delete)
+*   `created_at`: DateTimeField (Auto-generated timestamp)
+*   `updated_at`: DateTimeField (Auto-updated timestamp)
 
 ---
 
@@ -99,19 +143,21 @@ The application registers the following app-namespaced routes:
 
 | URL Pattern | View Name | Description | HTTP Method | Request Type |
 | :--- | :--- | :--- | :--- | :--- |
+| `/login/` | `login` | Renders login page and authenticates sessions | `GET`/`POST` | Form |
+| `/logout/` | `logout` | Clears sessions (requires CSRF token) | `POST` | Form |
+| `/signup/` | `signup` | Renders user registration form | `GET`/`POST` | Form |
 | `/` | `list` | Renders dashboard wrapper and master template | `GET` | Standard |
 | `/blogs/datatable/` | `datatable` | Server-side data source for ajax-datatables | `POST` | AJAX (JSON) |
 | `/blogs/create/` | `create` | Renders full-page form (GET) / processes creation (POST) | `GET`/`POST` | Form Redirect |
-| `/blogs/<int:pk>/edit/` | `edit` | Fetches details (GET) / saves changes (POST) | `GET`/`POST` | AJAX (JSON) |
+| `/blogs/<int:pk>/edit/` | `edit` | Fetches details (GET) / saves changes (PUT) | `GET`/`PUT` | AJAX (JSON) |
 | `/blogs/<int:pk>/` | `detail` | Renders single blog post detail view | `GET` | Standard |
-| `/blogs/<int:pk>/delete/` | `delete` | Handles deletion and media file cleanup on disk | `POST` | AJAX (JSON) |
+| `/blogs/<int:pk>/delete/` | `delete` | Handles deletion and media file cleanup on disk | `DELETE` | AJAX (JSON) |
 
 ---
 
 ## 📝 License & Credits
 
-* Table structures powered by [django-ajax-datatable](https://github.com/c-solidum/django-ajax-datatable).
-* Text formatting editor powered by [Summernote Lite](https://summernote.org/).
-* Multi-select elements styled via [Select2](https://select2.org/).
-* Dashboard layout based on the open-source [SB Admin 2 Template](https://startbootstrap.com/theme/sb-admin-2).
-```
+*   Table structures powered by [django-ajax-datatable](https://github.com/c-solidum/django-ajax-datatable).
+*   Text formatting editor powered by [Summernote Lite](https://summernote.org/).
+*   Multi-select elements styled via [Select2](https://select2.org/).
+*   Dashboard layout based on the open-source [SB Admin 2 Template](https://startbootstrap.com/theme/sb-admin-2).
