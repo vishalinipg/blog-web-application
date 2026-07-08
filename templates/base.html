@@ -134,17 +134,17 @@
                                         <div class="dropdown-divider"></div>
                                     {% endif %}
                                     <!-- Safe POST-based Logout form -->
-                                    <form action="{% url 'blog:logout' %}" method="POST" id="logout-form" style="display: none;">
+                                    <form action="{% url 'accounts:logout' %}" method="POST" id="logout-form" style="display: none;">
                                         {% csrf_token %}
                                     </form>
                                     <a class="dropdown-item" href="#" onclick="document.getElementById('logout-form').submit();">
                                         <i class="fas fa-sign-out-alt fa-sm fa-fw mr-2 text-gray-400"></i> Logout
                                     </a>
                                 {% else %}
-                                    <a class="dropdown-item" href="{% url 'blog:login' %}">
+                                    <a class="dropdown-item" href="{% url 'accounts:login' %}">
                                         <i class="fas fa-sign-in-alt fa-sm fa-fw mr-2 text-gray-400"></i> Login
                                     </a>
-                                    <a class="dropdown-item" href="{% url 'blog:signup' %}">
+                                    <a class="dropdown-item" href="{% url 'accounts:signup' %}">
                                         <i class="fas fa-user-plus fa-sm fa-fw mr-2 text-gray-400"></i> Register
                                     </a>
                                 {% endif %}

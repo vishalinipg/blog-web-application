@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "ajax_datatable",
     "blog",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -135,9 +136,9 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Authentication Configurations
 AUTHENTICATION_BACKENDS = [
     "django.contrib.auth.backends.ModelBackend",
-    "blog.backends.EmailBackend",
+    "accounts.backends.EmailBackend",
 ]
 
-LOGIN_URL = "blog:login"
+LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "blog:list"
-LOGOUT_REDIRECT_URL = "blog:login"
+LOGOUT_REDIRECT_URL = "accounts:login"

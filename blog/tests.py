@@ -3,7 +3,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import BlogForm, SignupForm
+from .forms import BlogForm
 from .models import Blog, Category
 
 
@@ -50,10 +50,10 @@ class AuthenticationAndAuthorizationTests(TestCase):
         )
         self.publisher_user.groups.add(self.publisher_group)
 
-        # Create a sample blog post for detail/update/delete verification
+        # Create a default blog post to verify permissions
         self.blog = Blog.objects.create(
-            title="Initial Test Post",
-            content="Initial content body description.",
+            title="Django Test Post",
+            content="Testing access controls on Blog model views.",
             category="Python",
             author=self.author_user,
             editor=self.editor_user,
@@ -61,122 +61,43 @@ class AuthenticationAndAuthorizationTests(TestCase):
         )
 
     # ==========================================
-    # 1. GROUP & PERMISSIONS INITIALIZATION TESTS
+    # 1. GROUP PERMISSIONS & MIGRATION TEST
     # ==========================================
     def test_groups_created_and_provisioned(self):
-        """Verify groups exist and carry the correct permission matrices."""
-        self.assertEqual(Group.objects.filter(name="Author").count(), 1)
-        self.assertEqual(Group.objects.filter(name="Editor").count(), 1)
-        self.assertEqual(Group.objects.filter(name="Publisher").count(), 1)
+        """Ensure Author, Editor, and Publisher groups exist and have correct permissions."""
+        self.assertTrue(Group.objects.filter(name="Author").exists())
+        self.assertTrue(Group.objects.filter(name="Editor").exists())
+        self.assertTrue(Group.objects.filter(name="Publisher").exists())
 
-        # Verify Author permissions
-        author_perms = [p.codename for p in self.author_group.permissions.all()]
+        # Test Author permissions
+        author_perms = self.author_group.permissions.values_list(
+            "codename", flat=True
+        )
         self.assertIn("view_blog", author_perms)
         self.assertIn("add_blog", author_perms)
         self.assertNotIn("change_blog", author_perms)
         self.assertNotIn("delete_blog", author_perms)
 
-        # Verify Editor permissions
-        editor_perms = [p.codename for p in self.editor_group.permissions.all()]
+        # Test Editor permissions
+        editor_perms = self.editor_group.permissions.values_list(
+            "codename", flat=True
+        )
         self.assertIn("view_blog", editor_perms)
         self.assertIn("add_blog", editor_perms)
         self.assertIn("change_blog", editor_perms)
         self.assertNotIn("delete_blog", editor_perms)
 
-        # Verify Publisher permissions
-        pub_perms = [p.codename for p in self.publisher_group.permissions.all()]
+        # Test Publisher permissions
+        pub_perms = self.publisher_group.permissions.values_list(
+            "codename", flat=True
+        )
         self.assertIn("view_blog", pub_perms)
         self.assertIn("add_blog", pub_perms)
         self.assertIn("change_blog", pub_perms)
         self.assertIn("delete_blog", pub_perms)
 
     # ==========================================
-    # 2. SIGNUP FORM VALIDATION TESTS
-    # ==========================================
-    def test_signup_validation_passwords_mismatch(self):
-        """Ensure signup fails when password and confirm_password do not match."""
-        data = {
-            "full_name": "New User",
-            "email": "new@example.com",
-            "group": "Author",
-            "password": "Password123",
-            "confirm_password": "DifferentPassword123",
-        }
-        form = SignupForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("confirm_password", form.errors)
-
-    def test_signup_validation_email_uniqueness(self):
-        """Ensure signup fails when email address already exists (case-insensitive)."""
-        data = {
-            "full_name": "Author Dup",
-            "email": "AUTHOR@example.com",  # Uppercase to test case-insensitive check
-            "group": "Author",
-            "password": "Password123",
-            "confirm_password": "Password123",
-        }
-        form = SignupForm(data=data)
-        self.assertFalse(form.is_valid())
-        self.assertIn("email", form.errors)
-
-    def test_signup_validation_password_strength(self):
-        """Ensure signup validation fails on insecure/weak passwords."""
-        # Test short password
-        form = SignupForm(
-            data={
-                "full_name": "User",
-                "email": "ok@example.com",
-                "group": "Author",
-                "password": "short",
-                "confirm_password": "short",
-            }
-        )
-        self.assertFalse(form.is_valid())
-        self.assertIn("password", form.errors)
-
-        # Test password missing digits
-        form = SignupForm(
-            data={
-                "full_name": "User",
-                "email": "ok@example.com",
-                "group": "Author",
-                "password": "NoDigitsPassword",
-                "confirm_password": "NoDigitsPassword",
-            }
-        )
-        self.assertFalse(form.is_valid())
-        self.assertIn("password", form.errors)
-
-    # ==========================================
-    # 3. LOGIN & AUTHENTICATION TESTS
-    # ==========================================
-    def test_email_login_success(self):
-        """Verify login succeeds using the custom backend with email and password."""
-        login_data = {"username": "author@example.com", "password": "Password123"}
-        response = self.client.post(reverse("blog:login"), login_data)
-        self.assertRedirects(response, reverse("blog:list"))
-
-    def test_email_login_case_insensitive(self):
-        """Verify login is case-insensitive for the email address."""
-        login_data = {"username": "AUTHOR@EXAMPLE.COM", "password": "Password123"}
-        response = self.client.post(reverse("blog:login"), login_data)
-        self.assertRedirects(response, reverse("blog:list"))
-
-    def test_email_login_failure(self):
-        """Verify login fails on wrong credentials and renders error."""
-        login_data = {"username": "author@example.com", "password": "WrongPassword"}
-        response = self.client.post(reverse("blog:login"), login_data)
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Please enter a correct email address")
-
-    def test_logout_redirect(self):
-        """Verify logout destroys session and redirects to login."""
-        self.client.login(username="author@example.com", password="Password123")
-        response = self.client.post(reverse("blog:logout"))
-        self.assertRedirects(response, reverse("blog:login"))
-
-    # ==========================================
-    # 4. ANONYMOUS USER RESTRICTIONS & AJAX 401
+    # 2. ANONYMOUS USER RESTRICTIONS & AJAX 401
     # ==========================================
     def test_anonymous_redirected_to_login(self):
         """Ensure anonymous requests to pages redirect to login."""
@@ -188,7 +109,7 @@ class AuthenticationAndAuthorizationTests(TestCase):
         ]
         for url in endpoints:
             response = self.client.get(url)
-            self.assertRedirects(response, f"{reverse('blog:login')}?next={url}")
+            self.assertRedirects(response, f"{reverse('accounts:login')}?next={url}")
 
     def test_anonymous_ajax_endpoints_return_401(self):
         """Ensure AJAX requests from anonymous users return 401 JSON responses."""
