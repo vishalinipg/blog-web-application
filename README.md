@@ -42,23 +42,30 @@ TechBlogs is a premium, fully-featured, AJAX-driven blog management application 
 ### 2. User Login Page
 ![User Login](screenshots/login.png)
 
-### 3. Blogs Dashboard List
+### 3. Forgot Password / Reset Page
+![Forgot Password 01](screenshots/password_reset1.png)
+![Forgot Password 02](screenshots/password_reset2.png)
+![Forgot Password 03](screenshots/password_reset3.png)
+![Forgot Password 04](screenshots/password_reset4.png)
+![Forgot Password 05](screenshots/password_reset5.png)
+
+### 4. Blogs Dashboard List
 ![Blogs Dashboard](screenshots/dashboard.png)
 
-### 4. Create Blog Page
+### 5. Create Blog Page
 ![Create Blog 01](screenshots/create_blog1.png)
 ![Create Blog 02](screenshots/create_blog2.png)
 
-### 5. Edit Blog Modal
+### 6. Edit Blog Modal
 ![Edit Blog Modal](screenshots/edit_modal.png)
 
-### 6. Blog Details View
+### 7. Blog Details View
 ![Blog Details View](screenshots/detail_view.png)
 
-### 7. Success Alerts
+### 8. Success Alerts
 ![Success Notification](screenshots/success_alert.png)
 
-### 8. Delete Alerts
+### 9. Delete Alerts
 ![Delete Notification](screenshots/delete_alert.png)
 
 ---
@@ -115,7 +122,7 @@ Visit `http://127.0.0.1:8000/` in your browser.
 
 To run the automated authentication and permission matrix test suite:
 ```bash
-python manage.py test blog
+python manage.py test
 ```
 
 ---
@@ -141,17 +148,21 @@ The `Blog` model consists of the following attributes:
 
 The application registers the following app-namespaced routes:
 
-| URL Pattern | View Name | Description | HTTP Method | Request Type |
+| URL Pattern | Namespace/View | Description | HTTP Method | Request Type |
 | :--- | :--- | :--- | :--- | :--- |
-| `/login/` | `login` | Renders login page and authenticates sessions | `GET`/`POST` | Form |
-| `/logout/` | `logout` | Clears sessions (requires CSRF token) | `POST` | Form |
-| `/signup/` | `signup` | Renders user registration form | `GET`/`POST` | Form |
-| `/` | `list` | Renders dashboard wrapper and master template | `GET` | Standard |
-| `/blogs/datatable/` | `datatable` | Server-side data source for ajax-datatables | `POST` | AJAX (JSON) |
-| `/blogs/create/` | `create` | Renders full-page form (GET) / processes creation (POST) | `GET`/`POST` | Form Redirect |
-| `/blogs/<int:pk>/edit/` | `edit` | Fetches details (GET) / saves changes (PUT) | `GET`/`PUT` | AJAX (JSON) |
-| `/blogs/<int:pk>/` | `detail` | Renders single blog post detail view | `GET` | Standard |
-| `/blogs/<int:pk>/delete/` | `delete` | Handles deletion and media file cleanup on disk | `DELETE` | AJAX (JSON) |
+| `/login/` | `accounts:login` | Renders login page and authenticates sessions | `GET`/`POST` | Form |
+| `/logout/` | `accounts:logout` | Clears sessions (requires CSRF token) | `POST` | Form |
+| `/signup/` | `accounts:signup` | Renders user registration form | `GET`/`POST` | Form |
+| `/password-reset/` | `accounts:password_reset` | Renders lookup form to initiate password resets | `GET`/`POST` | Form |
+| `/password-reset/done/` | `accounts:password_reset_done` | Shows email link dispatch confirmation page | `GET` | Standard |
+| `/password-reset-confirm/<uidb64>/<token>/` | `accounts:password_reset_confirm` | Form to choose a new password | `GET`/`POST` | Form |
+| `/password-reset/complete/` | `accounts:password_reset_complete` | Informs user that their password is now updated | `GET` | Standard |
+| `/` | `blog:list` | Renders dashboard wrapper and master template | `GET` | Standard |
+| `/blogs/datatable/` | `blog:datatable` | Server-side data source for ajax-datatables | `POST` | AJAX (JSON) |
+| `/blogs/create/` | `blog:create` | Renders full-page form (GET) / processes creation (POST) | `GET`/`POST` | Form Redirect |
+| `/blogs/<int:pk>/edit/` | `blog:edit` | Fetches details (GET) / saves changes (PUT) | `GET`/`PUT` | AJAX (JSON) |
+| `/blogs/<int:pk>/` | `blog:detail` | Renders single blog post detail view | `GET` | Standard |
+| `/blogs/<int:pk>/delete/` | `blog:delete` | Handles deletion and media file cleanup on disk | `DELETE` | AJAX (JSON) |
 
 ---
 
