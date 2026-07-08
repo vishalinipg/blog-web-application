@@ -142,3 +142,6 @@ AUTHENTICATION_BACKENDS = [
 LOGIN_URL = "accounts:login"
 LOGIN_REDIRECT_URL = "blog:list"
 LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Email Configurations for local testing
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

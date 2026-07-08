@@ -119,3 +119,28 @@ class AuthenticationTests(TestCase):
         self.client.login(username="testuser@example.com", password="Password123")
         response = self.client.post(reverse("accounts:logout"))
         self.assertRedirects(response, reverse("accounts:login"))
+
+    # ==========================================
+    # 3. PASSWORD RESET TESTS
+    # ==========================================
+    def test_password_reset_post_sends_email(self):
+        """Ensure password reset triggers email dispatch to console/outbox."""
+        from django.core import mail
+        response = self.client.post(
+            reverse("accounts:password_reset"),
+            {"email": "testuser@example.com"}
+        )
+        self.assertRedirects(response, reverse("accounts:password_reset_done"))
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].subject, "TechBlogs Password Reset Request")
+        self.assertIn("testuser@example.com", mail.outbox[0].to)
+
+    def test_password_reset_confirm_invalid_link(self):
+        """Ensure invalid tokens display appropriate link expiration feedback."""
+        invalid_url = reverse(
+            "accounts:password_reset_confirm",
+            kwargs={"uidb64": "invaliduid", "token": "invalidtoken"}
+        )
+        response = self.client.get(invalid_url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Invalid Token / Link Expired")
