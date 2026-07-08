@@ -2,6 +2,8 @@ from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
 
+from .models import Blog
+
 
 def create_groups_and_permissions(sender, **kwargs):
     """
@@ -12,8 +14,6 @@ def create_groups_and_permissions(sender, **kwargs):
     for app_config in kwargs.get("app_configs", []):
         if app_config.name == "blog":
             create_permissions(app_config, verbosity=0)
-
-    from .models import Blog
 
     content_type = ContentType.objects.get_for_model(Blog)
 
