@@ -68,6 +68,15 @@ TechBlogs is a premium, fully-featured, AJAX-driven blog management application 
 ### 9. Delete Alerts
 ![Delete Notification](screenshots/delete_alert.png)
 
+### 10. Celery Worker Logs
+![Celery Worker Logs](screenshots/celery_worker_logs.png)
+
+### 11. Celery Beat Schedule
+![Celery Beat Schedule](screenshots/celery_beat_schedule.png)
+
+### 12. Management Command Execution
+![Management Command](screenshots/management_command.png)
+
 ---
 
 ## 🛠️ Installation & Setup
@@ -91,9 +100,9 @@ python -m venv .venv
 ```
 
 ### 3. Install Dependencies
-Install all required packages:
+Install all required packages (including Celery and Redis support):
 ```bash
-pip install django django-ajax-datatable pillow
+pip install django django-ajax-datatable pillow celery redis django-celery-beat
 ```
 
 ### 4. Apply Database Migrations
@@ -115,6 +124,27 @@ Start the local server:
 python manage.py runserver
 ```
 Visit `http://127.0.0.1:8000/` in your browser.
+
+### 7. Run Celery Services
+Start a local Redis server (default port 6379), then launch Celery worker and scheduler in separate terminals:
+```bash
+# Start Celery Worker (Windows development recommends solo pool)
+celery -A blog_project worker --loglevel=info -P solo
+
+# Start Celery Beat Scheduler
+celery -A blog_project beat --loglevel=info
+```
+
+---
+
+## 💻 Custom Management Commands
+
+### Role Assignment Command
+You can assign or reassign user roles dynamically from the CLI:
+```bash
+python manage.py assign_blog_role --blog-id <id> --group <Author|Editor|Publisher> --email <user-email>
+```
+The command automatically triggers unassignment emails first to any previously assigned user, commits DB updates, and fires assignment emails asynchronously.
 
 ---
 

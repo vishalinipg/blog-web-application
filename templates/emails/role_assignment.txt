@@ -1,0 +1,7 @@
+Hello {{ user_name }},
+
+You have been assigned as {{ role }} for blog "{{ blog_title }}"
+
+Regards,
+
+Blog Report System

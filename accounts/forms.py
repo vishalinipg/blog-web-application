@@ -1,6 +1,6 @@
 import re
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 
 
@@ -125,3 +125,43 @@ class EmailAuthenticationForm(AuthenticationForm):
             }
         ),
     )
+
+
+class CeleryPasswordResetForm(PasswordResetForm):
+    """
+    Subclasses Django's standard PasswordResetForm to delegate email delivery
+    to a Celery task asynchronously.
+    """
+
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        from blog.tasks import send_password_reset_email_async
+        from django.contrib.auth.forms import PasswordResetForm
+
+        # Extract serializable context parameters
+        serializable_context = {
+            "email": context.get("email"),
+            "domain": context.get("domain"),
+            "site_name": context.get("site_name"),
+            "uid": context.get("uid"),
+            "user_id": context.get("user").id,
+            "token": context.get("token"),
+            "protocol": context.get("protocol"),
+        }
+
+        # Dispatch the email asynchronously via Celery
+        send_password_reset_email_async.delay(
+            subject_template_name,
+            email_template_name,
+            serializable_context,
+            from_email,
+            to_email,
+            html_email_template_name,
+        )

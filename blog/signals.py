@@ -46,3 +46,23 @@ def create_groups_and_permissions(sender, **kwargs):
         group, created = Group.objects.get_or_create(name=group_name)
         group.permissions.set(perms)
         group.save()
+
+    # Set up periodic task for the weekly Monday 6:00 AM report using django-celery-beat
+    try:
+        from django_celery_beat.models import CrontabSchedule, PeriodicTask
+
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute="0",
+            hour="6",
+            day_of_week="1",  # 1 represents Monday in django-celery-beat
+            day_of_month="*",
+            month_of_year="*",
+        )
+        PeriodicTask.objects.get_or_create(
+            crontab=schedule,
+            name="Weekly Author Submissions Report",
+            task="blog.tasks.send_weekly_author_submissions_report",
+        )
+    except Exception:
+        # Gracefully pass if beat models are not yet loaded/migrated
+        pass

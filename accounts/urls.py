@@ -1,7 +1,7 @@
 from django.contrib.auth import views as auth_views
 from django.urls import path, reverse_lazy
 
-from .forms import EmailAuthenticationForm
+from .forms import EmailAuthenticationForm, CeleryPasswordResetForm
 from .views import SignupView
 
 app_name = "accounts"
@@ -22,9 +22,11 @@ urlpatterns = [
     path(
         "password-reset/",
         auth_views.PasswordResetView.as_view(
+            form_class=CeleryPasswordResetForm,
             template_name="accounts/password_reset_form.html",
-            email_template_name="accounts/password_reset_email.html",
-            subject_template_name="accounts/password_reset_subject.txt",
+            email_template_name="emails/password_reset.txt",
+            subject_template_name="emails/password_reset_subject.txt",
+            html_email_template_name="emails/password_reset.html",
             success_url=reverse_lazy("accounts:password_reset_done"),
         ),
         name="password_reset",
