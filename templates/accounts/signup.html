@@ -1,0 +1,66 @@
+{% extends 'auth_base.html' %}
+{% load static %}
+
+{% block title %}Register - TechBlogs{% endblock %}
+{% block card_col_class %}col-xl-6 col-lg-7 col-md-9{% endblock %}
+
+{% block auth_content %}
+<div class="text-center">
+    <div class="sidebar-brand-icon rotate-n-15 text-primary mb-3" style="font-size: 2.5rem;">
+        <i class="fas fa-smile-wink"></i>
+    </div>
+    <h1 class="h4 text-gray-900 mb-4 font-weight-bold">Create an Account!</h1>
+</div>
+
+{% if form.non_field_errors %}
+    <div class="alert alert-danger small py-2 px-3 mb-3">
+        {% for error in form.non_field_errors %}
+            <i class="fas fa-exclamation-circle mr-1"></i> {{ error }}
+        {% endfor %}
+    </div>
+{% endif %}
+
+<form class="user" method="POST">
+    {% csrf_token %}
+    <div class="form-group">
+        {{ form.full_name }}
+        {% if form.full_name.errors %}
+            <span class="text-danger small pl-3"><i class="fas fa-times-circle mr-1"></i> {{ form.full_name.errors.0 }}</span>
+        {% endif %}
+    </div>
+    <div class="form-group">
+        {{ form.email }}
+        {% if form.email.errors %}
+            <span class="text-danger small pl-3"><i class="fas fa-times-circle mr-1"></i> {{ form.email.errors.0 }}</span>
+        {% endif %}
+    </div>
+    <div class="form-group">
+        <label class="small font-weight-bold text-gray-700 pl-3">Select User Group</label>
+        {{ form.group }}
+        {% if form.group.errors %}
+            <span class="text-danger small pl-3"><i class="fas fa-times-circle mr-1"></i> {{ form.group.errors.0 }}</span>
+        {% endif %}
+    </div>
+    <div class="form-group row">
+        <div class="col-sm-6 mb-3 mb-sm-0">
+            {{ form.password }}
+            {% if form.password.errors %}
+                <span class="text-danger small pl-3"><i class="fas fa-times-circle mr-1"></i> {{ form.password.errors.0 }}</span>
+            {% endif %}
+        </div>
+        <div class="col-sm-6">
+            {{ form.confirm_password }}
+            {% if form.confirm_password.errors %}
+                <span class="text-danger small pl-3"><i class="fas fa-times-circle mr-1"></i> {{ form.confirm_password.errors.0 }}</span>
+            {% endif %}
+        </div>
+    </div>
+    <button type="submit" class="btn btn-primary btn-user btn-block font-weight-bold shadow-sm">
+        Register Account
+    </button>
+</form>
+<hr>
+<div class="text-center">
+    <a class="small font-weight-bold" href="{% url 'accounts:login' %}">Already have an account? Login!</a>
+</div>
+{% endblock %}

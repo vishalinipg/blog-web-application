@@ -95,6 +95,49 @@
         </div>
     </div>
 
+    <!-- 5. Roles/Users Dropdowns -->
+    <div class="row mb-4">
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="id_author" class="font-weight-bold text-dark">Author</label>
+                        {{ form.author }}
+                        {% if form.author.errors %}
+                            <div class="invalid-feedback d-block">{{ form.author.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="id_editor" class="font-weight-bold text-dark">Editor</label>
+                        {{ form.editor }}
+                        {% if form.editor.errors %}
+                            <div class="invalid-feedback d-block">{{ form.editor.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4 mb-4 mb-md-0">
+            <div class="card shadow h-100">
+                <div class="card-body">
+                    <div class="form-group mb-0">
+                        <label for="id_publisher" class="font-weight-bold text-dark">Publisher</label>
+                        {{ form.publisher }}
+                        {% if form.publisher.errors %}
+                            <div class="invalid-feedback d-block">{{ form.publisher.errors.0 }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Actions Footer -->
     <div class="form-group mb-5">
         <button type="submit" class="btn btn-primary px-4 py-2 font-weight-bold shadow-sm" id="create-submit-btn">Submit</button>

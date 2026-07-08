@@ -1,4 +1,5 @@
 from django import forms
+from django.contrib.auth.models import User
 
 from .models import Blog
 
@@ -16,9 +17,24 @@ class BlogForm(forms.ModelForm):
         if self.instance and self.instance.pk:
             self.fields["image"].required = False
 
+        # Dynamically filter ForeignKey querysets to users belonging to corresponding groups
+        self.fields["author"].queryset = User.objects.filter(groups__name="Author")
+        self.fields["editor"].queryset = User.objects.filter(groups__name="Editor")
+        self.fields["publisher"].queryset = User.objects.filter(
+            groups__name="Publisher"
+        )
+
     class Meta:
         model = Blog
-        fields = ["title", "category", "content", "image"]
+        fields = [
+            "title",
+            "category",
+            "content",
+            "image",
+            "author",
+            "editor",
+            "publisher",
+        ]
         widgets = {
             "title": forms.TextInput(
                 attrs={"class": "form-control", "placeholder": "Enter blog title"}
@@ -32,4 +48,7 @@ class BlogForm(forms.ModelForm):
                 }
             ),
             "image": forms.FileInput(attrs={"class": "form-control-file"}),
+            "author": forms.Select(attrs={"class": "form-control"}),
+            "editor": forms.Select(attrs={"class": "form-control"}),
+            "publisher": forms.Select(attrs={"class": "form-control"}),
         }

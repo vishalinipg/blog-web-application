@@ -112,6 +112,45 @@
                         </div>
                     </div>
 
+                    <div class="row mb-4">
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="id_edit_author" class="font-weight-bold text-dark">Author</label>
+                                <select name="author" id="id_edit_author" class="form-control">
+                                    <option value="">---------</option>
+                                    {% for user in form.fields.author.queryset %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback d-none" id="error_edit_author"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="id_edit_editor" class="font-weight-bold text-dark">Editor</label>
+                                <select name="editor" id="id_edit_editor" class="form-control">
+                                    <option value="">---------</option>
+                                    {% for user in form.fields.editor.queryset %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback d-none" id="error_edit_editor"></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="form-group">
+                                <label for="id_edit_publisher" class="font-weight-bold text-dark">Publisher</label>
+                                <select name="publisher" id="id_edit_publisher" class="form-control">
+                                    <option value="">---------</option>
+                                    {% for user in form.fields.publisher.queryset %}
+                                        <option value="{{ user.id }}">{{ user.get_full_name|default:user.username }}</option>
+                                    {% endfor %}
+                                </select>
+                                <div class="invalid-feedback d-none" id="error_edit_publisher"></div>
+                            </div>
+                        </div>
+                    </div>
+
                     <div class="form-group form-check mb-0">
                         <input type="checkbox" name="publish" id="id_edit_publish" class="form-check-input" checked>
                         <label for="id_edit_publish" class="form-check-label font-weight-bold text-dark ml-2">Publish</label>

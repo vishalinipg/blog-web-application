@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     "django.contrib.staticfiles",
     "ajax_datatable",
     "blog",
+    "accounts",
 ]
 
 MIDDLEWARE = [
@@ -131,3 +132,16 @@ MEDIA_ROOT = BASE_DIR / "media"
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Authentication Configurations
+AUTHENTICATION_BACKENDS = [
+    "django.contrib.auth.backends.ModelBackend",
+    "accounts.email_backends.EmailBackend",
+]
+
+LOGIN_URL = "accounts:login"
+LOGIN_REDIRECT_URL = "blog:list"
+LOGOUT_REDIRECT_URL = "accounts:login"
+
+# Email Configurations for local testing
+EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"

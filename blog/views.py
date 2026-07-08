@@ -12,14 +12,17 @@ from django.views import View
 from django.views.generic import DetailView, TemplateView
 
 from .forms import BlogForm
+from accounts.mixins import AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin
 from .models import Blog
 
 
-class BlogListView(TemplateView):
+class BlogListView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, TemplateView):
     """
     Renders the blog list dashboard template, providing a blank BlogForm instance
     in the context for the asynchronous create modal.
     """
+
+    permission_required = "blog.view_blog"
 
     template_name = "blog/list.html"
 
@@ -29,11 +32,15 @@ class BlogListView(TemplateView):
         return context
 
 
-class BlogAjaxDatatableView(AjaxDatatableView):
+class BlogAjaxDatatableView(
+    AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, AjaxDatatableView
+):
     """
     Server-side controller for the django-ajax-datatable interface.
     Handles searching, pagination, sorting, and returns structured JSON responses.
     """
+
+    permission_required = "blog.view_blog"
 
     model = Blog
     title = "Blogs"
@@ -129,34 +136,49 @@ class BlogAjaxDatatableView(AjaxDatatableView):
         edit_url = reverse("blog:edit", kwargs={"pk": obj.id})
         delete_url = reverse("blog:delete", kwargs={"pk": obj.id})
 
-        # Generate action buttons as plain hoverable icons matching the screenshot
-        row["actions"] = f"""
-            <div class="text-center">
+        # Generate action buttons dynamically based on user permissions
+        user = self.request.user
+        can_view = user.has_perm("blog.view_blog")
+        can_edit = user.has_perm("blog.change_blog")
+        can_delete = user.has_perm("blog.delete_blog")
+
+        actions_html = '<div class="text-center">'
+        if can_view:
+            actions_html += f"""
                 <a href="{detail_url}" class="action-icon-link" title="View Detail">
                     <i class="fas fa-eye"></i>
                 </a>
+            """
+        if can_edit:
+            actions_html += f"""
                 <a href="#" class="action-icon-link edit-blog-btn" 
                    data-id="{obj.id}" 
                    data-url="{edit_url}" 
                    title="Edit Blog">
                     <i class="fas fa-pencil-alt"></i>
                 </a>
+            """
+        if can_delete:
+            actions_html += f"""
                 <a href="#" class="action-icon-link delete-blog-btn delete-icon" 
                    data-id="{obj.id}" 
                    data-url="{delete_url}" 
                    title="Delete Blog">
                     <i class="fas fa-trash"></i>
                 </a>
-            </div>
-        """
+            """
+        actions_html += "</div>"
+        row["actions"] = actions_html
         return row
 
 
-class BlogCreateView(View):
+class BlogCreateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
     """
     Handles rendering the full-page creation form (GET)
     and processing the creation request (POST) with tag formatting.
     """
+
+    permission_required = "blog.add_blog"
 
     def get(self, request, *args, **kwargs):
         form = BlogForm()
@@ -177,11 +199,13 @@ class BlogCreateView(View):
             return render(request, "blog/create.html", {"form": form})
 
 
-class BlogUpdateView(View):
+class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
     """
     Class-Based View to retrieve blog details (GET) and save changes (POST)
     asynchronously using form validations.
     """
+
+    permission_required = "blog.change_blog"
 
     def get(self, request, pk, *args, **kwargs):
         try:
@@ -198,6 +222,9 @@ class BlogUpdateView(View):
             "tags": obj.tags_list,  # Return tags list for select2 pre-population
             "publish": obj.publish,
             "image_url": obj.image.url if obj.image else "",
+            "author": obj.author_id,
+            "editor": obj.editor_id,
+            "publisher": obj.publisher_id,
         }
         return JsonResponse({"success": True, "data": data})
 
@@ -208,6 +235,11 @@ class BlogUpdateView(View):
             return JsonResponse(
                 {"success": False, "message": "Blog post not found."}, status=404
             )
+
+        # Track old image path to prevent storage leakage on replacement
+        old_image_path = (
+            obj.image.path if (obj.image and os.path.exists(obj.image.path)) else None
+        )
 
         # Parse multipart/form-data for PUT requests
         if request.content_type.startswith("multipart/form-data"):
@@ -221,6 +253,15 @@ class BlogUpdateView(View):
         form = BlogForm(put_data, put_files, instance=obj)
         if form.is_valid():
             edit_obj = form.save(commit=False)
+
+            # If a new image is uploaded, clean up the old file from disk
+            if form.cleaned_data.get("image") and old_image_path:
+                try:
+                    if os.path.exists(old_image_path):
+                        os.remove(old_image_path)
+                except Exception:
+                    pass
+
             # Extract and join multiselect tags array from the parsed PUT data
             tags_list = put_data.getlist("tags")
             edit_obj.tags = ", ".join(tags_list)
@@ -241,23 +282,27 @@ class BlogUpdateView(View):
             return JsonResponse({"success": False, "errors": errors}, status=400)
 
 
-class BlogDetailView(DetailView):
+class BlogDetailView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, DetailView):
     """
     Class-Based View to display the detail layout of a single blog post.
     Renders templates/blog/detail.html.
     """
+
+    permission_required = "blog.view_blog"
 
     model = Blog
     template_name = "blog/detail.html"
     context_object_name = "blog"
 
 
-class BlogDeleteView(View):
+class BlogDeleteView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
     """
     Class-Based View to handle asynchronous deletion of a Blog post.
     Deletes the associated media file from disk to prevent storage leakage,
     and removes the record from the database.
     """
+
+    permission_required = "blog.delete_blog"
 
     def delete(self, request, pk, *args, **kwargs):
         try:
