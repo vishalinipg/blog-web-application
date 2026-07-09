@@ -22,11 +22,17 @@ class Command(BaseCommand):
         parser.add_argument(
             "--email", type=str, required=True, help="Email of the user to assign"
         )
+        parser.add_argument(
+            "--dry-run",
+            action="store_true",
+            help="Perform validations but do not modify the database or send emails.",
+        )
 
     def handle(self, *args, **options):
         blog_id = options["blog_id"]
         group_name = options["group"]
         email = options["email"]
+        dry_run = options.get("dry_run", False)
 
         # 1. Validate Blog Exists
         try:
@@ -65,23 +71,30 @@ class Command(BaseCommand):
             )
 
         # 6. Notification and Database update sequencing:
-        # A. Send unassignment notification first to the old user (if present)
-        if old_user:
+        if not dry_run:
+            # A. Send unassignment notification first to the old user (if present)
+            if old_user:
+                send_role_assignment_notification_task.delay(
+                    old_user.id, blog.id, group_name, is_unassignment=True
+                )
+
+            # B. Update the database
+            setattr(blog, role_attr, user)
+            blog.save()
+
+            # C. Send assignment notification to the new user
             send_role_assignment_notification_task.delay(
-                old_user.id, blog.id, group_name, is_unassignment=True
+                user.id, blog.id, group_name, is_unassignment=False
             )
 
-        # B. Update the database
-        setattr(blog, role_attr, user)
-        blog.save()
-
-        # C. Send assignment notification to the new user
-        send_role_assignment_notification_task.delay(
-            user.id, blog.id, group_name, is_unassignment=False
-        )
-
-        self.stdout.write(
-            self.style.SUCCESS(
-                f"Successfully assigned '{user.username}' as {group_name} to blog post '{blog.title}'."
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"Successfully assigned '{user.username}' as {group_name} to blog post '{blog.title}'."
+                )
             )
-        )
+        else:
+            self.stdout.write(
+                self.style.SUCCESS(
+                    f"[DRY RUN] Successfully validated. Would assign '{user.username}' as {group_name} to blog post '{blog.title}'."
+                )
+            )

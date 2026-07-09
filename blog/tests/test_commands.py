@@ -1,3 +1,4 @@
+from io import StringIO
 from unittest.mock import patch
 
 from django.contrib.auth.models import Group, User
@@ -203,3 +204,32 @@ class AssignBlogRoleCommandTestCase(TestCase):
             "Multiple users exist with email 'author@example.com'",
             str(context.exception),
         )
+
+    @patch(
+        "blog.management.commands.assign_blog_role.send_role_assignment_notification_task.delay"
+    )
+    def test_dry_run_success(self, mock_send_mail):
+        out = StringIO()
+        call_command(
+            "assign_blog_role",
+            "--blog-id",
+            self.blog.id,
+            "--group",
+            "Author",
+            "--email",
+            "author@example.com",
+            "--dry-run",
+            stdout=out,
+        )
+        self.assertIn("[DRY RUN]", out.getvalue())
+        self.assertIn(
+            "Would assign 'author@example.com' as Author to blog post 'Notification Setup'",
+            out.getvalue(),
+        )
+
+        # Verify DB changes were NOT saved
+        self.blog.refresh_from_db()
+        self.assertIsNone(self.blog.author)
+
+        # Verify no Celery tasks were dispatched
+        mock_send_mail.assert_not_called()
