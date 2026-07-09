@@ -1,68 +1,22 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Blog Role Assignment Notification</title>
-    <style>
-        body {
-            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            background-color: #f8f9fc;
-            margin: 0;
-            padding: 40px 20px;
-            color: #5a5c69;
-        }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            background-color: #ffffff;
-            border-radius: 8px;
-            border: 1px solid #e3e6f0;
-            box-shadow: 0 4px 6px rgba(58, 59, 69, 0.05);
-            overflow: hidden;
-        }
-        .header {
-            background-color: #1cc88a; /* Green for success/addition */
-            padding: 25px;
-            text-align: center;
-            color: #ffffff;
-        }
-        .header h2 {
-            margin: 0;
-            font-weight: 700;
-        }
-        .content {
-            padding: 35px;
-            line-height: 1.6;
-        }
-        .role-highlight {
-            font-weight: 700;
-            color: #1cc88a;
-        }
-        .footer {
-            background-color: #f8f9fc;
-            padding: 20px 35px;
-            text-align: center;
-            font-size: 12px;
-            color: #858796;
-            border-top: 1px solid #e3e6f0;
-        }
-    </style>
-</head>
-<body>
+{% extends "emails/base.html" %}
 
-<div class="container">
-    <div class="header">
-        <h2>Role Assigned</h2>
-    </div>
-    <div class="content">
-        <p>Hello {{ user_name }},</p>
-        <p>You have been assigned as <span class="role-highlight">{{ role }}</span> for the blog post: <strong style="color: #3a3b45;">"{{ blog_title }}"</strong>.</p>
-        <p>You can view and manage the post on the dashboard according to your group rights.</p>
-    </div>
-    <div class="footer">
-        <p>Regards,<br><strong>Blog Report System</strong></p>
-    </div>
-</div>
+{% block title %}Blog Role Assignment Notification{% endblock %}
 
-</body>
-</html>
+{% block header_bg %}#1cc88a{% endblock %}
+
+{% block extra_css %}
+.role-highlight {
+    font-weight: 700;
+    color: #1cc88a;
+}
+{% endblock %}
+
+{% block header_title %}Role Assigned{% endblock %}
+
+{% block content %}
+<p>Hello {{ user_name }},</p>
+<p>You have been assigned as <span class="role-highlight">{{ role }}</span> for the blog post: <strong style="color: #3a3b45;">"{{ blog_title }}"</strong>.</p>
+<p>You can view and manage the post on the dashboard according to your group rights.</p>
+{% endblock %}
+
+{% block footer_text %}Regards,<br><strong>Blog Report System</strong>{% endblock %}
