@@ -1,9 +1,11 @@
 from django.contrib import messages
+from django.contrib.auth import views as auth_views
 from django.contrib.auth.models import Group, User
 from django.shortcuts import redirect, render
+from django.urls import reverse_lazy
 from django.views import View
 
-from .forms import SignupForm
+from .forms import CeleryPasswordResetForm, EmailAuthenticationForm, SignupForm
 
 
 class SignupView(View):
@@ -53,3 +55,50 @@ class SignupView(View):
             return redirect("accounts:login")
         else:
             return render(request, "accounts/signup.html", {"form": form})
+
+
+class EmailLoginView(auth_views.LoginView):
+    """
+    Custom LoginView configured to use the custom EmailAuthenticationForm.
+    """
+
+    template_name = "accounts/login.html"
+    authentication_form = EmailAuthenticationForm
+
+
+class CeleryPasswordResetView(auth_views.PasswordResetView):
+    """
+    Custom PasswordResetView configured to use the CeleryPasswordResetForm.
+    """
+
+    form_class = CeleryPasswordResetForm
+    template_name = "accounts/password_reset_form.html"
+    email_template_name = "emails/password_reset.txt"
+    subject_template_name = "emails/password_reset_subject.txt"
+    html_email_template_name = "emails/password_reset.html"
+    success_url = reverse_lazy("accounts:password_reset_done")
+
+
+class PasswordResetDoneView(auth_views.PasswordResetDoneView):
+    """
+    Custom view rendered after password reset email is enqueued.
+    """
+
+    template_name = "accounts/password_reset_done.html"
+
+
+class PasswordResetConfirmView(auth_views.PasswordResetConfirmView):
+    """
+    Custom view requesting the user to submit their new password choice.
+    """
+
+    template_name = "accounts/password_reset_confirm.html"
+    success_url = reverse_lazy("accounts:password_reset_complete")
+
+
+class PasswordResetCompleteView(auth_views.PasswordResetCompleteView):
+    """
+    Custom view rendered after the password is successfully updated.
+    """
+
+    template_name = "accounts/password_reset_complete.html"
