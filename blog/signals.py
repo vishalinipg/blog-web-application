@@ -57,11 +57,17 @@ def create_groups_and_permissions(sender, **kwargs):
             day_of_month="*",
             month_of_year="*",
         )
-        PeriodicTask.objects.get_or_create(
-            crontab=schedule,
+        task_entry, created = PeriodicTask.objects.get_or_create(
             name="Weekly Author Submissions Report",
-            task="blog.tasks.send_weekly_author_submissions_report",
+            defaults={
+                "crontab": schedule,
+                "task": "worker.tasks.send_weekly_author_submissions_report",
+            },
         )
+        if not created:
+            task_entry.task = "worker.tasks.send_weekly_author_submissions_report"
+            task_entry.crontab = schedule
+            task_entry.save()
     except Exception:
         # Gracefully pass if beat models are not yet loaded/migrated
         pass

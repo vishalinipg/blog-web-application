@@ -2,7 +2,7 @@ from django.contrib.auth.models import Group, User
 from django.core.management.base import BaseCommand, CommandError
 
 from blog.models import Blog
-from blog.tasks import send_role_assignment_notification_task
+from worker.tasks import send_role_assignment_notification_task
 
 
 class Command(BaseCommand):

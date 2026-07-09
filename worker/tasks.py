@@ -9,7 +9,7 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils import timezone
 
-from .models import Blog
+from blog.models import Blog
 
 logger = get_task_logger(__name__)
 

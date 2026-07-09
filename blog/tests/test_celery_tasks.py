@@ -1,17 +1,16 @@
 import datetime
 from unittest.mock import patch
+
 from django.contrib.auth.models import Group, User
 from django.core import mail
 from django.test import TestCase
 from django.utils import timezone
 
 from blog.models import Blog, Category
-from blog.tasks import (
-    send_password_reset_email_async,
-    send_role_assignment_notification_task,
-    send_weekly_author_submissions_email_task,
-    send_weekly_author_submissions_report,
-)
+from worker.tasks import (send_password_reset_email_async,
+                          send_role_assignment_notification_task,
+                          send_weekly_author_submissions_email_task,
+                          send_weekly_author_submissions_report)
 
 
 class CeleryTasksTestCase(TestCase):
@@ -63,7 +62,9 @@ class CeleryTasksTestCase(TestCase):
         start_str = (prev_week_time - datetime.timedelta(hours=12)).isoformat()
         end_str = (prev_week_time + datetime.timedelta(days=1)).isoformat()
 
-        send_weekly_author_submissions_email_task(self.author_user.id, start_str, end_str)
+        send_weekly_author_submissions_email_task(
+            self.author_user.id, start_str, end_str
+        )
 
         # Verify email was sent and contains details
         self.assertEqual(len(mail.outbox), 1)
@@ -80,14 +81,18 @@ class CeleryTasksTestCase(TestCase):
         start_str = (today - datetime.timedelta(days=7)).isoformat()
         end_str = today.isoformat()
 
-        send_weekly_author_submissions_email_task(self.author_user.id, start_str, end_str)
+        send_weekly_author_submissions_email_task(
+            self.author_user.id, start_str, end_str
+        )
 
         # Verify email was sent and reports 0 blogs
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.author_user.email])
         self.assertIn("Total blogs uploaded this week: 0", email.body)
-        self.assertIn("No blog submissions were recorded during this period.", email.body)
+        self.assertIn(
+            "No blog submissions were recorded during this period.", email.body
+        )
 
     def test_weekly_author_submissions_email_with_no_publisher(self):
         # Create a blog post with no publisher
@@ -110,13 +115,15 @@ class CeleryTasksTestCase(TestCase):
         start_str = (prev_week_time - datetime.timedelta(hours=12)).isoformat()
         end_str = (prev_week_time + datetime.timedelta(days=1)).isoformat()
 
-        send_weekly_author_submissions_email_task(self.author_user.id, start_str, end_str)
+        send_weekly_author_submissions_email_task(
+            self.author_user.id, start_str, end_str
+        )
 
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertIn("Not Assigned", email.body)
 
-    @patch("blog.tasks.send_weekly_author_submissions_email_task.delay")
+    @patch("worker.tasks.send_weekly_author_submissions_email_task.delay")
     def test_send_weekly_author_submissions_report_triggers_delay(self, mock_delay):
         send_weekly_author_submissions_report()
         # Verify delay was called for our author
@@ -136,7 +143,9 @@ class CeleryTasksTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.author_user.email])
-        self.assertIn("Assigned as Author for blog: Test Blog Notifications", email.subject)
+        self.assertIn(
+            "Assigned as Author for blog: Test Blog Notifications", email.subject
+        )
         self.assertIn("assigned as Author", email.body)
 
     def test_send_role_assignment_notification_unassignment(self):
@@ -153,7 +162,10 @@ class CeleryTasksTestCase(TestCase):
         self.assertEqual(len(mail.outbox), 1)
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.author_user.email])
-        self.assertIn("Removed as Author from blog: Test Blog Notifications Removal", email.subject)
+        self.assertIn(
+            "Removed as Author from blog: Test Blog Notifications Removal",
+            email.subject,
+        )
         self.assertIn("removed as Author", email.body)
 
     def test_send_password_reset_email_async(self):
@@ -181,4 +193,7 @@ class CeleryTasksTestCase(TestCase):
         email = mail.outbox[0]
         self.assertEqual(email.to, [self.author_user.email])
         self.assertEqual(email.subject, "TechBlogs Password Reset Request")
-        self.assertIn("http://testserver/password-reset-confirm/MTI/some-valid-token-mock/", email.body)
+        self.assertIn(
+            "http://testserver/password-reset-confirm/MTI/some-valid-token-mock/",
+            email.body,
+        )

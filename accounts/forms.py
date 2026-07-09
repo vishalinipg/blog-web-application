@@ -4,7 +4,7 @@ from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
 
-from blog.tasks import send_password_reset_email_async
+from worker.tasks import send_password_reset_email_async
 
 
 class SignupForm(forms.Form):

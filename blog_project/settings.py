@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     "blog",
     "accounts",
     "django_celery_beat",
+    "worker",
 ]
 
 MIDDLEWARE = [
