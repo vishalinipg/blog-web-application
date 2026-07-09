@@ -1,7 +1,10 @@
 import re
+
 from django import forms
-from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
+
+from worker.tasks import send_password_reset_email_async
 
 
 class SignupForm(forms.Form):
@@ -13,7 +16,10 @@ class SignupForm(forms.Form):
     full_name = forms.CharField(
         max_length=150,
         widget=forms.TextInput(
-            attrs={"class": "form-control form-control-user", "placeholder": "Full Name"}
+            attrs={
+                "class": "form-control form-control-user",
+                "placeholder": "Full Name",
+            }
         ),
         label="Full Name",
     )
@@ -82,13 +88,9 @@ class SignupForm(forms.Form):
                     "password", "Password must be at least 8 characters long."
                 )
             if not re.search(r"[A-Za-z]", password):
-                self.add_error(
-                    "password", "Password must contain at least one letter."
-                )
+                self.add_error("password", "Password must contain at least one letter.")
             if not re.search(r"\d", password):
-                self.add_error(
-                    "password", "Password must contain at least one number."
-                )
+                self.add_error("password", "Password must contain at least one number.")
 
         return cleaned_data
 
@@ -125,3 +127,40 @@ class EmailAuthenticationForm(AuthenticationForm):
             }
         ),
     )
+
+
+class CeleryPasswordResetForm(PasswordResetForm):
+    """
+    Subclasses Django's standard PasswordResetForm to delegate email delivery
+    to a Celery task asynchronously.
+    """
+
+    def send_mail(
+        self,
+        subject_template_name,
+        email_template_name,
+        context,
+        from_email,
+        to_email,
+        html_email_template_name=None,
+    ):
+        # Extract serializable context parameters
+        serializable_context = {
+            "email": context.get("email"),
+            "domain": context.get("domain"),
+            "site_name": context.get("site_name"),
+            "uid": context.get("uid"),
+            "user_id": context.get("user").id,
+            "token": context.get("token"),
+            "protocol": context.get("protocol"),
+        }
+
+        # Dispatch the email asynchronously via Celery
+        send_password_reset_email_async.delay(
+            subject_template_name,
+            email_template_name,
+            serializable_context,
+            from_email,
+            to_email,
+            html_email_template_name,
+        )

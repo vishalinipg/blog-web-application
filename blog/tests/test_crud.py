@@ -3,8 +3,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase
 from django.urls import reverse
 
-from .forms import BlogForm
-from .models import Blog, Category
+from blog.forms import BlogForm
+from blog.models import Blog, Category
 
 
 class AuthenticationAndAuthorizationTests(TestCase):

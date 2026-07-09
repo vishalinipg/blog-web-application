@@ -1,0 +1,20 @@
+Hello {{ author_name }},
+
+Here is your weekly blog submission report.
+
+Total blogs uploaded this week: {{ blogs_count }}
+
+Details
+{% if blogs %}
+---------------------------------------------------------
+Title | Category | Created At | Publisher
+---------------------------------------------------------
+{% for blog in blogs %}{{ blog.title }} | {{ blog.category }} | {{ blog.created_at|date:"m/d/Y" }} | {% if blog.publisher %}{{ blog.publisher.get_full_name|default:blog.publisher.email }}{% else %}Not Assigned{% endif %}
+{% endfor %}---------------------------------------------------------
+{% else %}
+No blog submissions were recorded during this period.
+{% endif %}
+
+Regards,
+
+Blog Report System

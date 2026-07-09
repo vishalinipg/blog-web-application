@@ -68,6 +68,15 @@ TechBlogs is a premium, fully-featured, AJAX-driven blog management application 
 ### 9. Delete Alerts
 ![Delete Notification](screenshots/delete_alert.png)
 
+### 10. Celery Worker Logs
+![Celery Worker Logs](screenshots/celery_worker_logs.png)
+
+### 11. Celery Beat Schedule
+![Celery Beat Schedule](screenshots/celery_beat_schedule.png)
+
+### 12. Management Command Execution
+![Management Command](screenshots/management_command.png)
+
 ---
 
 ## 🛠️ Installation & Setup
@@ -91,30 +100,63 @@ python -m venv .venv
 ```
 
 ### 3. Install Dependencies
-Install all required packages:
+Install all required packages (including Celery, Redis, and PostgreSQL support):
 ```bash
-pip install django django-ajax-datatable pillow
+pip install django django-ajax-datatable pillow celery redis django-celery-beat psycopg2-binary
 ```
 
-### 4. Apply Database Migrations
-Generate and apply migrations to build the SQLite database schema and trigger group provisioning signals:
+### 4. Configure PostgreSQL Database
+Ensure a PostgreSQL server is running locally on port 5432. Set your PostgreSQL database password in the environment before running Django commands:
+```powershell
+# Set environment variable (PowerShell)
+$env:DB_PASSWORD="your_postgres_password"
+
+# Set environment variable (CMD)
+set DB_PASSWORD=your_postgres_password
+```
+*(By default, Django connects to a database named `blog_db` with user `postgres` on `localhost`. You can optionally customize these using `DB_NAME`, `DB_USER`, `DB_HOST`, and `DB_PORT` environment variables.)*
+
+### 5. Apply Database Migrations
+Apply migrations to build the PostgreSQL database schema and trigger group provisioning signals:
 ```bash
-python manage.py makemigrations
 python manage.py migrate
 ```
 
-### 5. Create a Superuser
+### 6. Create a Superuser
 Create an administrative account to access the backend admin panel:
 ```bash
 python manage.py createsuperuser
 ```
 
-### 6. Run Development Server
-Start the local server:
+### 7. Run Development Server
+Start the local server (make sure your database password environment variable is set in the shell):
 ```bash
 python manage.py runserver
 ```
 Visit `http://127.0.0.1:8000/` in your browser.
+
+### 8. Run Celery Services
+Start a local Redis server (default port 6379), then launch Celery worker and scheduler in separate terminals:
+```bash
+# Start Celery Worker (Windows development recommends solo pool)
+celery -A blog_project worker --loglevel=info -P solo
+
+# Start Celery Beat Scheduler
+celery -A blog_project beat --loglevel=info
+```
+
+---
+
+## 💻 Custom Management Commands
+
+### Role Assignment Command
+You can assign or reassign user roles dynamically from the CLI:
+```bash
+python manage.py assign_blog_role --blog-id <id> --group <Author|Editor|Publisher> --email <user-email> [--dry-run]
+```
+The command automatically triggers unassignment emails first to any previously assigned user, commits DB updates, and fires assignment emails asynchronously.
+
+Passing `--dry-run` performs all user, blog, and role validations but skips saving changes to the database and sending emails.
 
 ---
 

@@ -1,0 +1,111 @@
+{% extends "emails/base.html" %}
+
+{% block title %}Weekly Blog Submission Report{% endblock %}
+
+{% block extra_css %}
+.container {
+    max-width: 650px;
+}
+.greeting {
+    font-size: 18px;
+    font-weight: 700;
+    color: #4e73df;
+    margin-bottom: 20px;
+}
+.summary-badge {
+    background-color: #f0f4fd;
+    border-left: 4px solid #4e73df;
+    padding: 15px 20px;
+    margin-bottom: 30px;
+    border-radius: 0 4px 4px 0;
+}
+.summary-badge p {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+.table-responsive {
+    margin-top: 25px;
+    overflow-x: auto;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+}
+th {
+    background-color: #f8f9fc;
+    color: #4e73df;
+    font-weight: 700;
+    padding: 12px 15px;
+    border-bottom: 2px solid #e3e6f0;
+    text-transform: uppercase;
+    font-size: 12px;
+}
+td {
+    padding: 12px 15px;
+    border-bottom: 1px solid #e3e6f0;
+    color: #5a5c69;
+}
+tr:last-child td {
+    border-bottom: none;
+}
+.no-data {
+    text-align: center;
+    padding: 30px;
+    color: #858796;
+    background-color: #f8f9fc;
+    border-radius: 6px;
+    font-style: italic;
+}
+{% endblock %}
+
+{% block header_title %}Weekly Blog Submission Report{% endblock %}
+
+{% block content %}
+<p class="greeting">Hello {{ author_name }},</p>
+<p>Here is your weekly blog submission report for the calendar week ({{ start_date|date:"m/d/Y" }} to {{ end_date|date:"m/d/Y" }}).</p>
+
+<div class="summary-badge">
+    <p>Total blogs uploaded this week: <span style="color: #4e73df; font-weight: 800;">{{ blogs_count }}</span></p>
+</div>
+
+{% if blogs %}
+    <h3 style="margin-top: 30px; font-weight: 700; color: #3a3b45;">Details</h3>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Created At</th>
+                    <th>Publisher</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for blog in blogs %}
+                    <tr>
+                        <td style="font-weight: 600; color: #2e59d9;">{{ blog.title }}</td>
+                        <td>{{ blog.category }}</td>
+                        <td>{{ blog.created_at|date:"m/d/Y" }}</td>
+                        <td>
+                            {% if blog.publisher %}
+                                {{ blog.publisher.get_full_name|default:blog.publisher.email }}
+                            {% else %}
+                                <span style="color: #e74a3b; font-style: italic; font-size: 13px;">Not Assigned</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="no-data">
+        No blog submissions were recorded during this period.
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block footer_text %}Regards,<br><strong>Blog Report System</strong>{% endblock %}

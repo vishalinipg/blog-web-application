@@ -1,0 +1,7 @@
+Hello {{ user_name }},
+
+You have been removed as {{ role }} from blog "{{ blog_title }}"
+
+Regards,
+
+Blog Report System

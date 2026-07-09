@@ -1,6 +1,7 @@
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from .models import Blog
 
@@ -46,3 +47,27 @@ def create_groups_and_permissions(sender, **kwargs):
         group, created = Group.objects.get_or_create(name=group_name)
         group.permissions.set(perms)
         group.save()
+
+    # Set up periodic task for the weekly Monday 6:00 AM report using django-celery-beat
+    try:
+        schedule, _ = CrontabSchedule.objects.get_or_create(
+            minute="0",
+            hour="6",
+            day_of_week="1",  # 1 represents Monday in django-celery-beat
+            day_of_month="*",
+            month_of_year="*",
+        )
+        task_entry, created = PeriodicTask.objects.get_or_create(
+            name="Weekly Author Submissions Report",
+            defaults={
+                "crontab": schedule,
+                "task": "worker.tasks.send_weekly_author_submissions_report",
+            },
+        )
+        if not created:
+            task_entry.task = "worker.tasks.send_weekly_author_submissions_report"
+            task_entry.crontab = schedule
+            task_entry.save()
+    except Exception:
+        # Gracefully pass if beat models are not yet loaded/migrated
+        pass
