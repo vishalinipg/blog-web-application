@@ -2,6 +2,7 @@ import re
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
+from blog.tasks import send_password_reset_email_async
 
 
 class SignupForm(forms.Form):
@@ -142,9 +143,6 @@ class CeleryPasswordResetForm(PasswordResetForm):
         to_email,
         html_email_template_name=None,
     ):
-        from blog.tasks import send_password_reset_email_async
-        from django.contrib.auth.forms import PasswordResetForm
-
         # Extract serializable context parameters
         serializable_context = {
             "email": context.get("email"),

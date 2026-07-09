@@ -1,6 +1,7 @@
 from django.contrib.auth.management import create_permissions
 from django.contrib.auth.models import Group, Permission
 from django.contrib.contenttypes.models import ContentType
+from django_celery_beat.models import CrontabSchedule, PeriodicTask
 
 from .models import Blog
 
@@ -49,8 +50,6 @@ def create_groups_and_permissions(sender, **kwargs):
 
     # Set up periodic task for the weekly Monday 6:00 AM report using django-celery-beat
     try:
-        from django_celery_beat.models import CrontabSchedule, PeriodicTask
-
         schedule, _ = CrontabSchedule.objects.get_or_create(
             minute="0",
             hour="6",
