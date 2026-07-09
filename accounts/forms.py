@@ -1,7 +1,9 @@
 import re
+
 from django import forms
 from django.contrib.auth.forms import AuthenticationForm, PasswordResetForm
 from django.contrib.auth.models import User
+
 from blog.tasks import send_password_reset_email_async
 
 
@@ -14,7 +16,10 @@ class SignupForm(forms.Form):
     full_name = forms.CharField(
         max_length=150,
         widget=forms.TextInput(
-            attrs={"class": "form-control form-control-user", "placeholder": "Full Name"}
+            attrs={
+                "class": "form-control form-control-user",
+                "placeholder": "Full Name",
+            }
         ),
         label="Full Name",
     )
@@ -83,13 +88,9 @@ class SignupForm(forms.Form):
                     "password", "Password must be at least 8 characters long."
                 )
             if not re.search(r"[A-Za-z]", password):
-                self.add_error(
-                    "password", "Password must contain at least one letter."
-                )
+                self.add_error("password", "Password must contain at least one letter.")
             if not re.search(r"\d", password):
-                self.add_error(
-                    "password", "Password must contain at least one number."
-                )
+                self.add_error("password", "Password must contain at least one number.")
 
         return cleaned_data
 
