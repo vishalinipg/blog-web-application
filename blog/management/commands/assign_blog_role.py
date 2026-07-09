@@ -45,6 +45,8 @@ class Command(BaseCommand):
             user = User.objects.get(email__iexact=email)
         except User.DoesNotExist:
             raise CommandError(f"User with email '{email}' does not exist.")
+        except User.MultipleObjectsReturned:
+            raise CommandError(f"Multiple users exist with email '{email}'.")
 
         # 4. Validate User belongs to the specified Group
         if not user.groups.filter(name=group_name).exists():
