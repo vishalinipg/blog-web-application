@@ -32,6 +32,12 @@ TechBlogs is a premium, fully-featured, AJAX-driven blog management application 
 *   **Ajax-Aware Guard Mixins**: Custom `AjaxLoginRequiredMixin` and `AjaxPermissionRequiredMixin` intercept unauthenticated and unauthorized requests, returning custom `401` or `403` status JSON payloads for AJAX calls, or redirecting page loads.
 *   **Dynamic Actions Rendering**: Datatable edit/delete buttons are generated server-side in `customize_row()` by querying individual permissions of the active session.
 
+### 4. RESTful API (Version 1)
+*   **DRF Generic Views**: Exposes standard endpoints utilizing Django REST Framework's `ListCreateAPIView` and `RetrieveUpdateDestroyAPIView` under the `/api/v1/` namespace.
+*   **Secure Authentication**: Integrates Session and Basic authentication globally.
+*   **Verifiable RBAC Validation**: Enforces database authorization checks matching the existing groups permissions matrix (Author, Editor, Publisher).
+*   **Post-Commit Cleanup**: Integrates `transaction.on_commit()` hooks to cleanly delete cover photos from local/cloud storage backends upon transaction commit, preventing orphans.
+
 ---
 
 ## 📸 Screenshots
@@ -205,6 +211,8 @@ The application registers the following app-namespaced routes:
 | `/blogs/<int:pk>/edit/` | `blog:edit` | Fetches details (GET) / saves changes (PUT) | `GET`/`PUT` | AJAX (JSON) |
 | `/blogs/<int:pk>/` | `blog:detail` | Renders single blog post detail view | `GET` | Standard |
 | `/blogs/<int:pk>/delete/` | `blog:delete` | Handles deletion and media file cleanup on disk | `DELETE` | AJAX (JSON) |
+| `/api/v1/blogs/` | `blog_api:blog-list` | Retrieve list or create a new blog post | `GET`/`POST` | REST JSON |
+| `/api/v1/blogs/<int:pk>/` | `blog_api:blog-detail` | Retrieve, update, or destroy a blog instance | `GET`/`PUT`/`PATCH`/`DELETE` | REST JSON |
 
 ---
 

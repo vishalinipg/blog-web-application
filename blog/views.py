@@ -11,9 +11,11 @@ from django.utils.text import Truncator
 from django.views import View
 from django.views.generic import DetailView, TemplateView
 
-from .forms import BlogForm
 from accounts.mixins import AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin
+
+from .forms import BlogForm
 from .models import Blog
+from .utils import delete_file_on_commit
 
 
 class BlogListView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, TemplateView):
@@ -236,10 +238,8 @@ class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
                 {"success": False, "message": "Blog post not found."}, status=404
             )
 
-        # Track old image path to prevent storage leakage on replacement
-        old_image_path = (
-            obj.image.path if (obj.image and os.path.exists(obj.image.path)) else None
-        )
+        # Track old image to prevent storage leakage on replacement
+        old_image = obj.image if obj.image else None
 
         # Parse multipart/form-data for PUT requests
         if request.content_type.startswith("multipart/form-data"):
@@ -254,13 +254,9 @@ class BlogUpdateView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
         if form.is_valid():
             edit_obj = form.save(commit=False)
 
-            # If a new image is uploaded, clean up the old file from disk
-            if form.cleaned_data.get("image") and old_image_path:
-                try:
-                    if os.path.exists(old_image_path):
-                        os.remove(old_image_path)
-                except Exception:
-                    pass
+            # If a new image is uploaded, clean up the old file
+            if form.cleaned_data.get("image") and old_image:
+                delete_file_on_commit(old_image)
 
             # Extract and join multiselect tags array from the parsed PUT data
             tags_list = put_data.getlist("tags")
@@ -312,17 +308,11 @@ class BlogDeleteView(AjaxLoginRequiredMixin, AjaxPermissionRequiredMixin, View):
                 {"success": False, "message": "Blog post not found."}, status=404
             )
 
-        # Delete image file from disk if it exists
-        if obj.image:
-            image_path = obj.image.path
-            try:
-                if os.path.exists(image_path):
-                    os.remove(image_path)
-            except Exception as e:
-                # Log the exception or handle pass safely in production
-                pass
-
+        # Delete image file from storage if it exists
+        old_image = obj.image if obj.image else None
         obj.delete()
+        if old_image:
+            delete_file_on_commit(old_image)
         return JsonResponse(
             {"success": True, "message": "Blog post deleted successfully."}
         )
